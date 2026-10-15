@@ -1,0 +1,1604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta name="claude:viewport-fit-sides" content="cover">
+<title>The Autonomous Author</title>
+<meta name="description" content="The Autonomous Author: a living design document for a first-draft documentation pipeline with DITA 1.3 and MDX output and two mandatory human gates.">
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+
+:root {
+  --bg: #fafaf8; --bg2: #f2f0eb; --bg3: #e8e5de;
+  --text: #1a1917; --text2: #5a5852; --text3: #8a8880;
+  --border: #d8d5ce; --border2: #c8c5be;
+  --amber: #b07010; --amber-bg: #fdf4e3; --amber-border: #e8c870;
+  --teal: #0a6b52; --teal-bg: #e8f5f0; --teal-border: #80c8b0;
+  --purple: #4a40b0; --purple-bg: #f0effe; --purple-border: #b0a8e8;
+  --coral: #b03820; --coral-bg: #fdf0ec; --coral-border: #e8a090;
+  --blue: #1850a0; --blue-bg: #eaf2fe; --blue-border: #90b8e8;
+  --serif: 'DM Serif Display', Georgia, serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', system-ui, sans-serif;
+  --r: 6px; --r-lg: 10px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--sans); background: var(--bg); color: var(--text); font-size: 15px; line-height: 1.7; }
+.page-wrap { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+/* SIDEBAR */
+.sidebar { position: sticky; top: 0; height: 100vh; overflow-y: auto; background: var(--bg2); border-right: 1px solid var(--border); padding: 2rem 1.25rem; display: flex; flex-direction: column; gap: 0; }
+.sidebar-logo { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 0.25rem; }
+.sidebar-project { font-family: var(--serif); font-size: 18px; color: var(--text); margin-bottom: 0.25rem; line-height: 1.2; }
+.sidebar-sub { font-size: 11px; color: var(--text3); margin-bottom: 2rem; line-height: 1.4; }
+.sidebar-nav { list-style: none; display: flex; flex-direction: column; gap: 1px; }
+.sidebar-nav a { display: block; font-size: 12px; color: var(--text2); text-decoration: none; padding: 5px 8px; border-radius: var(--r); transition: background 0.15s, color 0.15s; }
+.sidebar-nav a:hover { background: var(--bg3); color: var(--text); }
+.sidebar-nav a.active { background: var(--text); color: var(--bg); }
+.sidebar-nav .sub { padding-left: 20px; font-size: 11px; color: var(--text3); }
+.sidebar-nav .sub:hover { color: var(--text2); }
+.sidebar-divider { height: 1px; background: var(--border); margin: 1rem 0; }
+.stack-block { margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+.stack-title { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 0.75rem; }
+.stack-item { font-size: 11px; color: var(--text2); padding: 4px 0; border-bottom: 1px solid var(--border); line-height: 1.3; }
+.stack-item strong { display: block; color: var(--text); font-weight: 500; font-size: 11px; }
+
+/* MAIN */
+.main { padding: 0; }
+.topbar { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 2.5rem; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: rgba(250,250,248,0.95); backdrop-filter: blur(8px); z-index: 100; }
+.topbar-breadcrumb { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.topbar-right { display: flex; align-items: center; gap: 16px; }
+.topbar-tag { font-family: var(--mono); font-size: 10px; padding: 3px 8px; background: var(--bg3); border-radius: 99px; color: var(--text2); }
+
+.content { padding: 3rem 2.5rem 5rem; max-width: 860px; }
+
+/* HEADER */
+.doc-header { margin-bottom: 3rem; padding-bottom: 3rem; border-bottom: 1px solid var(--border); }
+.doc-eyebrow { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 10.5px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 1.25rem; }
+.doc-eyebrow::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.doc-title { font-family: var(--serif); font-size: clamp(28px, 4vw, 44px); font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; color: var(--text); margin-bottom: 0.75rem; }
+.doc-title em { font-style: italic; color: var(--teal); }
+.doc-byline { font-size: 13px; color: var(--text3); display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 2rem; }
+.doc-disclaimer { font-size: 12px; color: var(--text3); font-style: italic; border-left: 2px solid var(--border2); padding-left: 12px; margin-bottom: 2rem; line-height: 1.6; }
+
+/* STAT GRID */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid var(--border); border-radius: var(--r-lg); overflow: hidden; margin: 0 0 2.5rem; }
+.stat-cell { padding: 1.25rem 1.5rem; border-right: 1px solid var(--border); background: white; }
+.stat-cell:last-child { border-right: none; }
+.stat-value { font-family: var(--serif); font-size: 30px; font-weight: 400; line-height: 1; margin-bottom: 4px; }
+.stat-value.amber { color: var(--amber); }
+.stat-value.teal { color: var(--teal); }
+.stat-value.purple { color: var(--purple); }
+.stat-value.coral { color: var(--coral); }
+.stat-label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; line-height: 1.4; }
+
+/* SECTIONS */
+.section { margin-bottom: 4.5rem; scroll-margin-top: 90px; }
+.section-heading { font-family: var(--serif); font-size: 27px; font-weight: 400; color: var(--text); margin-bottom: 1.25rem; display: flex; align-items: baseline; gap: 12px; }
+.section-num { font-family: var(--mono); font-size: 12px; color: var(--text3); }
+.section-kicker { font-style: italic; color: var(--text3); font-size: 14px; margin: -0.75rem 0 1.5rem; }
+.subsection-heading { font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--text); margin: 2.25rem 0 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 8px; scroll-margin-top: 90px; }
+.subsection-heading::before { content: ''; display: block; width: 20px; height: 1px; background: var(--border2); }
+.body-text { font-size: 14.5px; line-height: 1.75; color: var(--text2); margin-bottom: 1rem; }
+.body-text strong { color: var(--text); font-weight: 500; }
+.body-text code { font-family: var(--mono); font-size: 12px; background: var(--bg3); padding: 1px 5px; border-radius: 3px; color: var(--text); }
+.body-text a { color: var(--teal); }
+
+/* CALLOUT */
+.callout { border-left: 2px solid var(--border2); padding: 1rem 1.25rem; margin: 1.5rem 0; background: var(--bg2); }
+.callout.amber { border-color: var(--amber-border); background: var(--amber-bg); }
+.callout.teal { border-color: var(--teal-border); background: var(--teal-bg); }
+.callout.purple { border-color: var(--purple-border); background: var(--purple-bg); }
+.callout.blue { border-color: var(--blue-border); background: var(--blue-bg); }
+.callout.coral { border-color: var(--coral-border); background: var(--coral-bg); }
+.callout-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 4px; }
+.callout.amber .callout-label { color: var(--amber); }
+.callout.teal .callout-label { color: var(--teal); }
+.callout.purple .callout-label { color: var(--purple); }
+.callout.blue .callout-label { color: var(--blue); }
+.callout.coral .callout-label { color: var(--coral); }
+.callout-body { font-size: 13.5px; line-height: 1.65; color: var(--text2); }
+.callout-body em { color: var(--text); font-style: italic; }
+
+/* FIGURE */
+.figure { margin: 2rem 0; }
+.figure-label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text3); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 8px; }
+.figure-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+.figure-sublabel { font-size: 12px; color: var(--text3); font-style: italic; margin-bottom: 0.75rem; }
+.figure-body { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; padding: 1.5rem; overflow-x: auto; }
+.figure-note { font-size: 12px; color: var(--text3); margin-top: 0.5rem; font-style: italic; }
+
+/* TABLES */
+.comp-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 1.5rem 0; }
+.comp-table th { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); padding: 8px 12px; border-bottom: 1px solid var(--border); text-align: left; background: var(--bg2); }
+.comp-table td { padding: 10px 12px; border-bottom: 1px solid var(--border); color: var(--text2); vertical-align: top; }
+.comp-table td:first-child { font-weight: 500; color: var(--text); }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table .highlight td { background: var(--teal-bg); }
+.comp-table .dotted td { background: var(--amber-bg); }
+.badge { font-family: var(--mono); font-size: 10px; padding: 2px 7px; border-radius: 99px; }
+.badge.amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+.badge.teal { background: var(--teal-bg); color: var(--teal); border: 1px solid var(--teal-border); }
+.badge.gray { background: var(--bg3); color: var(--text3); border: 1px solid var(--border); }
+.badge.red { background: var(--coral-bg); color: var(--coral); border: 1px solid var(--coral-border); }
+.badge.purple { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+
+/* PERSONA / STAKEHOLDER CARDS */
+.card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1.5rem 0; }
+.p-card { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; padding: 1.25rem 1.4rem; scroll-margin-top: 90px; }
+.p-card-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.6rem; }
+.p-card-name { font-family: var(--serif); font-size: 17px; color: var(--text); }
+.p-card-tag { font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.06em; padding: 2px 7px; border-radius: 99px; }
+.p-card-field { font-size: 12.5px; line-height: 1.6; margin-bottom: 6px; color: var(--text2); }
+.p-card-field strong { display: block; font-family: var(--mono); font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--text3); margin-bottom: 1px; }
+
+/* ADR CARDS */
+.adr-card { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; padding: 1.25rem 1.5rem; margin-bottom: 1rem; scroll-margin-top: 90px; }
+.adr-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.75rem; flex-wrap: wrap; gap: 8px; }
+.adr-id { font-family: var(--mono); font-size: 11px; color: var(--teal); font-weight: 500; }
+.adr-title { font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--text); }
+.adr-row { font-size: 12.5px; line-height: 1.6; color: var(--text2); margin-bottom: 6px; }
+.adr-row strong { color: var(--text); font-weight: 500; }
+
+/* USER STORY CARDS */
+.us-card { border-left: 2px solid var(--teal-border); background: var(--teal-bg); border-radius: 0 var(--r) var(--r) 0; padding: 0.9rem 1.1rem; margin-bottom: 0.75rem; }
+.us-id { font-family: var(--mono); font-size: 10px; color: var(--teal); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
+.us-story { font-size: 13.5px; color: var(--text); line-height: 1.6; margin-bottom: 6px; font-style: italic; }
+.us-ac { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* PIPELINE / AGENTS STRIP */
+.pipeline-steps { display: flex; gap: 0; margin: 1.5rem 0; align-items: stretch; }
+.pipe-step { flex: 1; border: 1px solid var(--border); border-right: none; padding: 1rem 0.875rem; background: white; position: relative; }
+.pipe-step:last-child { border-right: 1px solid var(--border); border-radius: 0 var(--r) var(--r) 0; }
+.pipe-step:first-child { border-radius: var(--r) 0 0 var(--r); }
+.pipe-num { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-bottom: 4px; }
+.pipe-name { font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+.pipe-owner { font-size: 11px; color: var(--text3); }
+
+/* SIMULATOR (adapted from AlignR pattern) */
+.sim-box { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; overflow: hidden; }
+.sim-scenarios { display: flex; gap: 8px; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; background: var(--bg2); }
+.scenario-btn { font-family: var(--mono); font-size: 11px; padding: 6px 12px; border: 1px solid var(--border2); border-radius: 99px; background: white; color: var(--text2); cursor: pointer; transition: all 0.15s; }
+.scenario-btn:hover { border-color: var(--teal-border); color: var(--teal); }
+.scenario-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+.sim-desc { padding: 1rem 1.25rem; font-size: 12.5px; color: var(--text2); line-height: 1.6; border-bottom: 1px solid var(--border); }
+.sim-stages { display: flex; padding: 1.25rem; gap: 0; border-bottom: 1px solid var(--border); }
+.sim-stage { flex: 1; text-align: center; position: relative; padding: 0 6px; }
+.stage-dot { width: 11px; height: 11px; border-radius: 50%; background: var(--bg3); border: 1px solid var(--border2); margin: 0 auto 8px; transition: all 0.2s; }
+.stage-dot.running { background: var(--amber); border-color: var(--amber); animation: pulse 0.8s infinite; }
+.stage-dot.done { background: var(--teal); border-color: var(--teal); }
+.stage-dot.blocked { background: var(--coral); border-color: var(--coral); }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.4; } }
+.stage-name { font-family: var(--sans); font-size: 11px; font-weight: 500; color: var(--text); }
+.stage-owner { font-size: 9.5px; color: var(--text3); margin-top: 1px; }
+.stage-bar { height: 2px; background: var(--border); margin-top: 8px; overflow: hidden; }
+.stage-bar-fill { height: 100%; width: 0; background: var(--teal); transition: width 0.4s; }
+.stage-timing { font-family: var(--mono); font-size: 9.5px; color: var(--text3); margin-top: 4px; }
+.stage-timing.done { color: var(--teal); }
+.sim-controls { display: flex; align-items: center; justify-content: space-between; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); }
+.run-btn { font-family: var(--mono); font-size: 12px; padding: 7px 18px; background: var(--text); color: var(--bg); border: none; border-radius: var(--r); cursor: pointer; }
+.run-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.sim-status { font-family: var(--mono); font-size: 11px; color: var(--text3); }
+.sim-status.running { color: var(--amber); }
+.sim-status.done { color: var(--teal); }
+.sim-output { font-family: var(--mono); font-size: 12px; line-height: 1.8; padding: 1.25rem; background: #16150f; color: #d8d5ce; max-height: 340px; overflow-y: auto; }
+.out-line { display: block; }
+.out-comment { color: #7a8570; }
+.out-warn { color: #d8a84a; }
+.out-key { color: #8ba8c8; }
+.out-val { color: #d8d5ce; }
+
+/* CAROUSEL (Stakeholder Deck) */
+.carousel { border: 1px solid var(--border); border-radius: var(--r-lg); background: white; overflow: hidden; }
+.carousel-nav { display: flex; gap: 4px; padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); background: var(--bg2); overflow-x: auto; }
+.slide-btn { font-family: var(--mono); font-size: 10.5px; padding: 5px 10px; border: 1px solid var(--border2); border-radius: 99px; background: white; color: var(--text3); cursor: pointer; white-space: nowrap; }
+.slide-btn.active { background: var(--purple); color: white; border-color: var(--purple); }
+.slide-panel { display: none; padding: 2.5rem; min-height: 320px; }
+.slide-panel.active { display: block; }
+.slide-headline { font-family: var(--serif); font-size: 22px; color: var(--text); margin-bottom: 0.5rem; line-height: 1.25; }
+.slide-sub { font-size: 13px; color: var(--text3); margin-bottom: 1.25rem; }
+.slide-note { font-size: 12.5px; color: var(--text2); background: var(--bg2); border-left: 2px solid var(--purple-border); padding: 0.75rem 1rem; margin-top: 1.25rem; font-style: italic; }
+
+/* DIAGRAM SVG helpers */
+.dbox { fill: white; stroke: var(--border2); stroke-width: 1.5; }
+.dbox-agent { fill: var(--teal-bg); stroke: var(--teal-border); stroke-width: 1.5; }
+.dbox-ext { fill: var(--blue-bg); stroke: var(--blue-border); stroke-width: 1.5; }
+.dbox-reg { fill: var(--amber-bg); stroke: var(--amber-border); stroke-width: 1.5; }
+.dtext { font-family: 'Inter', sans-serif; fill: var(--text); }
+.dtext-sm { font-family: 'IBM Plex Mono', monospace; fill: var(--text3); }
+.darrow { stroke: var(--text3); stroke-width: 1.3; fill: none; marker-end: url(#arrow); }
+.darrow-dash { stroke: var(--coral); stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; marker-end: url(#arrow); }
+
+footer.doc-footer { border-top: 1px solid var(--border); padding: 2.5rem; text-align: center; font-size: 12px; color: var(--text3); font-style: italic; }
+
+@media (max-width: 900px) {
+  .page-wrap { grid-template-columns: 1fr; }
+  .sidebar { position: relative; height: auto; }
+  .card-grid { grid-template-columns: 1fr; }
+  .stat-grid { grid-template-columns: repeat(2,1fr); }
+}
+
+/* ---- Additions for The Autonomous Author (same tokens, same idiom as above) ---- */
+:root { color-scheme: light; }
+.page-wrap > .main { min-width: 0; }
+.table-wrap { overflow-x: auto; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 1.5rem 0; }
+.two-col .comp-table { margin: 0; }
+.bullets { margin: 0 0 1rem 1.1rem; color: var(--text2); font-size: 14.5px; line-height: 1.75; }
+.bullets strong { color: var(--text); font-weight: 500; }
+.adr-card .obj-q { font-family: var(--serif); font-size: 17px; color: var(--text); margin-bottom: 0.5rem; }
+.dbox-human { fill: var(--amber-bg); stroke: var(--amber-border); stroke-width: 1.5; }
+.dbox-bad { fill: var(--coral-bg); stroke: var(--coral-border); stroke-width: 1.5; }
+.dbox-p2 { fill: var(--purple-bg); stroke: var(--purple-border); stroke-width: 1.5; }
+.darrow-hum { stroke: var(--amber); stroke-width: 1.5; fill: none; marker-end: url(#arrow); }
+.dband { fill: var(--bg2); stroke: var(--border); stroke-width: 1; }
+.dtext-bad { font-family: 'IBM Plex Mono', monospace; fill: var(--coral); }
+.dtext-hum { font-family: 'IBM Plex Mono', monospace; fill: var(--amber); }
+.darrow-bad { stroke: var(--coral); stroke-width: 1.3; fill: none; stroke-dasharray: 4 3; }
+.arrowhead { fill: var(--text3); }
+.us-card.p2 { border-left-color: var(--purple-border); background: var(--purple-bg); }
+.us-card.p2 .us-id { color: var(--purple); }
+.us-card .us-ac strong { color: var(--text); font-weight: 500; }
+
+/* code samples share the simulator's terminal palette */
+.code-cap { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin: 1.25rem 0 0.4rem; }
+.code-block { font-family: var(--mono); font-size: 12px; line-height: 1.7; background: #16150f; color: #d8d5ce; padding: 1.1rem 1.25rem; border-radius: var(--r); overflow-x: auto; white-space: pre; }
+.code-block .c { color: #7a8570; } .code-block .k { color: #8ba8c8; } .code-block .w { color: #d8a84a; }
+
+/* simulator: seven stages, human-gate and skipped states, decision ledger */
+.sim-stages-wrap { overflow-x: auto; border-bottom: 1px solid var(--border); }
+.sim-stages-wrap .sim-stages { border-bottom: none; min-width: 600px; }
+.stage-dot.human { background: var(--amber); border-color: var(--amber); }
+.stage-dot.skipped { background: transparent; border-style: dashed; }
+.stage-bar-fill.human { background: var(--amber); }
+.stage-bar-fill.blocked { background: var(--coral); }
+.sim-status.held { color: var(--coral); }
+.sim-output { white-space: pre-wrap; word-break: break-word; }
+.out-ok { color: #7cc4a4; }
+.out-bad { color: #e8907a; }
+.hitl-ledger { padding: 1rem 1.25rem; background: var(--amber-bg); border-top: 1px solid var(--amber-border); }
+.hitl-ledger .callout-label { color: var(--amber); }
+.hitl-rows { font-size: 12.5px; color: var(--text); line-height: 1.6; }
+.hitl-rows div { padding: 4px 0; border-bottom: 1px dashed var(--amber-border); }
+.hitl-rows div:last-child { border-bottom: none; }
+
+/* deck: bullet lines inside a slide */
+.slide-points { list-style: none; margin: 0 0 0.5rem; }
+.slide-points li { font-size: 14px; color: var(--text2); line-height: 1.7; padding-left: 14px; position: relative; }
+.slide-points li::before { content: '·'; position: absolute; left: 2px; color: var(--purple); font-weight: 600; }
+
+/* sources */
+.src-group { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); margin: 1.5rem 0 0.5rem; }
+.src-list { margin: 0 0 0 1.4rem; font-size: 13px; color: var(--text2); line-height: 1.65; }
+.src-list li { margin-bottom: 6px; padding-left: 4px; scroll-margin-top: 90px; }
+.src-list a { color: var(--teal); }
+.src-list .src-use { display: block; font-size: 12px; color: var(--text3); }
+sup.ref { font-family: var(--mono); font-size: 9.5px; color: var(--teal); }
+sup.ref a { color: inherit; text-decoration: none; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+@media (max-width: 900px) {
+  .topbar { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); top: env(safe-area-inset-top, 0px); flex-wrap: wrap; gap: 6px; }
+  .content { padding-block: 2rem 4rem; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .sidebar { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .sidebar-nav { display: grid; grid-template-columns: 1fr 1fr; }
+  .sidebar-nav .sub, .stack-block { display: none; }
+  .two-col { grid-template-columns: 1fr; }
+  .figure-body svg { min-width: 640px; }
+  .pipeline-steps { flex-wrap: wrap; }
+  .pipe-step { flex: 1 1 45%; border-right: 1px solid var(--border); border-radius: 0 !important; }
+  .stat-cell { border-bottom: 1px solid var(--border); }
+  .slide-panel { padding: 1.5rem 1.25rem; }
+  .doc-title { font-size: 30px; }
+}
+
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+<nav class="sidebar" aria-label="Sections">
+  <div class="sidebar-logo">Tessellate Networks</div>
+  <div class="sidebar-project">The Autonomous Author</div>
+  <div class="sidebar-sub">First-draft documentation pipeline with visible human gates. Living design document.</div>
+  <ul class="sidebar-nav">
+    <li><a href="#s1">01 · Client Brief</a></li>
+    <li><a href="#s2">02 · User Profiles</a></li>
+    <li><a href="#s2-stakeholders" class="sub">Stakeholders</a></li>
+    <li><a href="#s2-writers" class="sub">Writer personas</a></li>
+    <li><a href="#s3">03 · Problem Statement</a></li>
+    <li><a href="#s4">04 · As-Is DDLC</a></li>
+    <li><a href="#s5">05 · Cost of the Gap</a></li>
+    <li><a href="#s6">06 · User Stories</a></li>
+    <li><a href="#s7">07 · Proposed Design</a></li>
+    <li><a href="#s7-hitl" class="sub">Where the humans are</a></li>
+    <li><a href="#s7-agents" class="sub">Agents</a></li>
+    <li><a href="#s7-outputs" class="sub">DITA + MDX outputs</a></li>
+    <li><a href="#s7-mlops" class="sub">MLOps</a></li>
+    <li><a href="#s7-infra" class="sub">Infrastructure</a></li>
+    <li><a href="#s8">08 · Simulation</a></li>
+    <li><a href="#s9">09 · Success Metrics</a></li>
+    <li><a href="#s10">10 · ADRs</a></li>
+    <li><a href="#s11">11 · Objection Handling</a></li>
+    <li><a href="#s12">12 · Cost Analysis</a></li>
+    <li><a href="#s13">13 · Roadmap</a></li>
+    <li><a href="#s14">14 · Stakeholder Deck</a></li>
+    <li><a href="#appendix">Appendix · Glossary</a></li>
+    <li><a href="#sources">Sources</a></li>
+  </ul>
+  <div class="stack-block">
+    <div class="stack-title">Register</div>
+    <div class="stack-item"><strong>6 agents + 1 emitter</strong>Intake · Research · Draft · Ambiguity · Compliance · Review Prep → DITA/MDX</div>
+    <div class="stack-item"><strong>2 human gates</strong>writer review in the app · CODEOWNERS review on the pull request</div>
+    <div class="stack-item"><strong>10 ADRs</strong>each with the alternative we rejected</div>
+    <div class="stack-item"><strong>5 + 2 people</strong>stakeholders and writer personas</div>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="topbar">
+    <div class="topbar-breadcrumb">tessellate-networks / the-autonomous-author / design-doc</div>
+    <span class="topbar-tag">fictional client · portfolio artefact</span>
+  </div>
+
+  <div class="content">
+
+  <header class="doc-header" id="top">
+    <div class="doc-eyebrow">Living design document</div>
+    <h1 class="doc-title">The Autonomous Author <em>— First Drafts from the Pull Request,<br/>Approved by People, on the Record</em></h1>
+    <div class="doc-byline">
+      <span>Client: Tessellate Networks, Documentation</span>
+      <span>Sponsor: Helen Marsh, Director of Documentation</span>
+      <span>Track: Documentation Automation</span>
+      <span>Author: Siddharth Rao Potukuchi</span>
+    </div>
+    <div class="doc-disclaimer">Tessellate Networks, its products (the TN-7300 leaf switch, TessOS, FlowSentry), the TessOS command line, and every named person in this document are fictional, built for a portfolio piece. The standards it relies on are real and cited: IETF RFC 7432, RFC 8365 and RFC 9136 for EVPN and VXLAN, OASIS DITA 1.3, the Google developer documentation style guide, Vale, and GitHub CODEOWNERS. Figures marked <em>illustrative</em> are modelled, with the method shown.</div>
+    <div class="stat-grid">
+      <div class="stat-cell"><div class="stat-value coral">~5 days</div><div class="stat-label">docs land after release GA today <span class="badge amber">illustrative</span></div></div>
+      <div class="stat-cell"><div class="stat-value teal">6 + 1</div><div class="stat-label">single-purpose agents, plus one code emitter</div></div>
+      <div class="stat-cell"><div class="stat-value amber">2</div><div class="stat-label">human gates, both mandatory</div></div>
+      <div class="stat-cell"><div class="stat-value purple">2</div><div class="stat-label">outputs from one draft: DITA 1.3 and MDX</div></div>
+    </div>
+  </header>
+
+  <!-- ============ 01 ============ -->
+  <section class="section" id="s1">
+    <h2 class="section-heading"><span class="section-num">01</span> Client Brief</h2>
+    <p class="section-kicker">Tessellate Networks — the anchor client.</p>
+
+    <p class="body-text">The Autonomous Author is a documentation pipeline for Tessellate Networks. It reads a merged pull request or a feature spec, writes a first draft as a DITA 1.3 topic and an MDX page, checks it against the house style, and then stops. A writer reviews the draft in the app, and a code owner approves it in Git. Nothing publishes on its own, and the record shows who decided what.</p>
+
+    <p class="body-text">Tessellate Networks builds data-center switching: the TN-7300 series of leaf switches and TessOS, the network operating system that runs on them. TessOS ships a feature release every quarter. Each release adds fabric features such as EVPN with VXLAN, and each feature needs a configuration task, a concept topic, and a CLI reference entry before customers can use it.</p>
+    <p class="body-text">The documentation team has nine writers and a director. Their source is a DITA 1.3 corpus <sup class="ref"><a href="#src-7">[7]</a></sup> authored in Oxygen and published as WebHelp <sup class="ref"><a href="#src-10">[10]</a></sup>. A developer portal on Docusaurus is in pilot, so new content also needs an MDX version <sup class="ref"><a href="#src-9">[9]</a></sup>. The team uses a house style based on the Google developer documentation style guide <sup class="ref"><a href="#src-11">[11]</a></sup>.</p>
+    <p class="body-text">The team is not short of skill. It is short of time at the start of each feature. Writers learn about a feature when a documentation ticket arrives, often days after the code merged, and then spend days collecting context from engineers who have moved on to the next sprint. Leadership has approved an AI drafting pilot on one condition: the team must be able to show, for every published topic, which person reviewed and approved it.</p>
+
+    <div class="two-col">
+      <div class="figure-body">
+        <table class="comp-table">
+          <tr><td>Company</td><td>Tessellate Networks (fictional)</td></tr>
+          <tr><td>Products</td><td>TN-7300 leaf switches · TessOS · FlowSentry anomaly model</td></tr>
+          <tr><td>Release cadence</td><td>TessOS feature release every quarter</td></tr>
+          <tr><td>Documented features</td><td>~45 per release <span class="badge amber">illustrative</span></td></tr>
+          <tr><td>Docs team</td><td>9 writers, 1 director, 1 tools engineer (shared)</td></tr>
+        </table>
+      </div>
+      <div class="figure-body">
+        <table class="comp-table">
+          <tr><td>Source format</td><td>DITA 1.3 in Oxygen XML Editor</td></tr>
+          <tr><td>Outputs</td><td>WebHelp (today) · Docusaurus MDX portal (pilot)</td></tr>
+          <tr><td>House style</td><td>Based on the Google developer documentation style guide</td></tr>
+          <tr><td>Standards in scope</td><td>RFC 7432 <sup class="ref"><a href="#src-3">[3]</a></sup> · RFC 8365 <sup class="ref"><a href="#src-4">[4]</a></sup> · RFC 9136 <sup class="ref"><a href="#src-5">[5]</a></sup></td></tr>
+          <tr><td>Pilot condition</td><td>A named human approver for every published topic</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="callout amber">
+      <div class="callout-label">The sentence this document exists to make true</div>
+      <div class="callout-body">"Give my writers a solid first draft on the day the code merges, and show me who approved every line before it ships." Helen Marsh, Director of Documentation</div>
+    </div>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 1.1 — System Context</div>
+      <div class="figure-sublabel">C4 level 1, before any pipeline exists. Who the documentation team works with today.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 330" width="100%" role="img" aria-label="System context: the documentation team sits between engineering, product, publishing, readers and standards.">
+          <defs><marker id="ar1" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" class="arrowhead"/></marker></defs>
+          <rect x="300" y="125" width="220" height="80" rx="8" class="dbox" stroke-width="2"/>
+          <text x="410" y="160" text-anchor="middle" class="dtext" font-size="14" font-weight="600">Documentation team</text>
+          <text x="410" y="179" text-anchor="middle" class="dtext-sm" font-size="10">9 writers · DITA 1.3 · Oxygen</text>
+
+          <rect x="30" y="25" width="190" height="58" rx="6" class="dbox-ext"/>
+          <text x="125" y="49" text-anchor="middle" class="dtext" font-size="12">TessOS engineering</text>
+          <text x="125" y="66" text-anchor="middle" class="dtext-sm" font-size="9.5">pull requests · design specs</text>
+          <path d="M175,83 L320,124" class="darrow" marker-end="url(#ar1)"/>
+
+          <rect x="600" y="25" width="190" height="58" rx="6" class="dbox-ext"/>
+          <text x="695" y="49" text-anchor="middle" class="dtext" font-size="12">Product management</text>
+          <text x="695" y="66" text-anchor="middle" class="dtext-sm" font-size="9.5">feature tickets · release scope</text>
+          <path d="M645,83 L500,124" class="darrow" marker-end="url(#ar1)"/>
+
+          <rect x="30" y="245" width="190" height="58" rx="6" class="dbox"/>
+          <text x="125" y="269" text-anchor="middle" class="dtext" font-size="12">Field engineers, customers</text>
+          <text x="125" y="286" text-anchor="middle" class="dtext-sm" font-size="9.5">read the published docs</text>
+          <path d="M320,206 L178,244" class="darrow" marker-end="url(#ar1)"/>
+
+          <rect x="600" y="245" width="190" height="58" rx="6" class="dbox"/>
+          <text x="695" y="269" text-anchor="middle" class="dtext" font-size="12">Publishing</text>
+          <text x="695" y="286" text-anchor="middle" class="dtext-sm" font-size="9.5">WebHelp · Docusaurus pilot</text>
+          <path d="M500,206 L642,244" class="darrow" marker-end="url(#ar1)"/>
+
+          <rect x="315" y="262" width="190" height="50" rx="6" class="dbox-human"/>
+          <text x="410" y="283" text-anchor="middle" class="dtext" font-size="12">Engineering SMEs</text>
+          <text x="410" y="299" text-anchor="middle" class="dtext-sm" font-size="9.5">technical review</text>
+          <path d="M410,260 L410,208" class="darrow" marker-end="url(#ar1)"/>
+
+          <rect x="315" y="18" width="190" height="50" rx="6" class="dbox"/>
+          <text x="410" y="39" text-anchor="middle" class="dtext" font-size="12">Standards and style</text>
+          <text x="410" y="55" text-anchor="middle" class="dtext-sm" font-size="9.5">IETF RFCs · house style</text>
+          <path d="M410,68 L410,122" class="darrow" stroke-dasharray="3 3" marker-end="url(#ar1)"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 02 ============ -->
+  <section class="section" id="s2">
+    <h2 class="section-heading"><span class="section-num">02</span> User Profiles</h2>
+    <p class="section-kicker">Seven people. Each one owns a decision the pipeline must leave to them.</p>
+    <p class="body-text">Version 1 of this design served one writer working alone. Version 2 serves a team, so every profile carries one field v1 never needed: where the person sits in the loop. Template used throughout: <strong>Goal · Measured by · Resistance · Success looks like · Place in the loop.</strong></p>
+
+    <h3 class="subsection-heading" id="s2-stakeholders">Stakeholders</h3>
+    <div class="card-grid">
+      <div class="p-card" id="p-marsh"><div class="p-card-head"><span class="p-card-name">Helen Marsh</span><span class="p-card-tag" style="background:var(--purple-bg);color:var(--purple)">Director, Docs</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Docs ship with the release, and the team can defend every published word.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Features with an approved topic at GA; field-reported errors.</div>
+        <div class="p-card-field"><strong>Resistance</strong>"If an AI draft goes out wrong, it is my team's name on it."</div>
+        <div class="p-card-field"><strong>Success</strong>For any topic, she can show who approved it and what the AI changed first.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>Owns the style rules. Approves every change to <code>rules.json</code> and the Vale package.</div></div>
+
+      <div class="p-card" id="p-menon"><div class="p-card-head"><span class="p-card-name">Ravi Menon</span><span class="p-card-tag" style="background:var(--amber-bg);color:var(--amber)">Eng. Manager · Gate 2</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Specs are exact before his team builds; docs never claim behavior the code lacks.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Defects traced to spec ambiguity; review rounds per topic.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Review fatigue: "Now I check AI output as well as writers' drafts?"</div>
+        <div class="p-card-field"><strong>Success</strong>He reviews behavior, not wording, in one round.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>CODEOWNER for routing docs. His approval is required to merge.</div></div>
+
+      <div class="p-card" id="p-dubois"><div class="p-card-head"><span class="p-card-name">Claire Dubois</span><span class="p-card-tag" style="background:var(--teal-bg);color:var(--teal)">Product Manager</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Release docs explain what the feature is for, in the customer's terms.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Feature adoption after release.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Time: every docs sync is a meeting she cannot spare.</div>
+        <div class="p-card-field"><strong>Success</strong>The writer starts from her ticket with no meeting.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>Answers Research Agent questions the writer forwards to her.</div></div>
+
+      <div class="p-card" id="p-whitfield"><div class="p-card-head"><span class="p-card-name">Sam Whitfield</span><span class="p-card-tag" style="background:var(--bg3);color:var(--text2)">Release Manager</span></div>
+        <div class="p-card-field"><strong>Goal</strong>No feature reaches GA without its docs.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Open documentation items at release sign-off.</div>
+        <div class="p-card-field"><strong>Resistance</strong>None to the idea; distrust of status reports that are not tied to merges.</div>
+        <div class="p-card-field"><strong>Success</strong>One list of features without an approved topic, read from Git.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>Observer. Reads pull-request status; never approves content.</div></div>
+
+      <div class="p-card" id="p-pike"><div class="p-card-head"><span class="p-card-name">Jordan Pike</span><span class="p-card-tag" style="background:var(--blue-bg);color:var(--blue)">Field Engineer</span></div>
+        <div class="p-card-field"><strong>Goal</strong>Accurate steps on the day a customer upgrades.</div>
+        <div class="p-card-field"><strong>Measured by</strong>Escalations caused by missing or wrong docs.</div>
+        <div class="p-card-field"><strong>Resistance</strong>"Did a person who knows the feature check this, or did a model guess?"</div>
+        <div class="p-card-field"><strong>Success</strong>The topic's history shows a named approver.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>Downstream reader. Reports errors through a docs issue.</div></div>
+    </div>
+
+    <h3 class="subsection-heading" id="s2-writers">Writer Personas</h3>
+    <div class="card-grid">
+      <div class="p-card" id="p-desai"><div class="p-card-head"><span class="p-card-name">Anika Desai</span><span class="p-card-tag" style="background:var(--teal-bg);color:var(--teal)">P1 · Gate 1</span></div>
+        <div class="p-card-field"><strong>Role</strong>Senior Technical Writer, TessOS Routing. Downstream of code; Agile; about five features per release.</div>
+        <div class="p-card-field"><strong>Goal</strong>Start each feature from a grounded draft, not a blank DITA template.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Distrusts AI text she cannot trace back to a source.</div>
+        <div class="p-card-field"><strong>Success</strong>A draft on merge day, with the reasoning shown, and the final say on every change.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>Gate 1 owner for release topics. Opens the pull request.</div></div>
+
+      <div class="p-card" id="p-ferreira"><div class="p-card-head"><span class="p-card-name">Tomás Ferreira</span><span class="p-card-tag" style="background:var(--purple-bg);color:var(--purple)">P2 · Gate 1</span></div>
+        <div class="p-card-field"><strong>Role</strong>Technical Writer, Platform Specs. Upstream of code; documentation-driven development.</div>
+        <div class="p-card-field"><strong>Goal</strong>Specs precise enough that engineers never have to guess.</div>
+        <div class="p-card-field"><strong>Resistance</strong>Worries a tool will "fill in" what the spec does not yet know.</div>
+        <div class="p-card-field"><strong>Success</strong>Vague terms and missing failure paths flagged before Ravi's team sees the spec.</div>
+        <div class="p-card-field"><strong>Place in the loop</strong>Gate 1 owner for specs. Resolves every HIGH ambiguity flag.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 03 ============ -->
+  <section class="section" id="s3">
+    <h2 class="section-heading"><span class="section-num">03</span> Problem Statement</h2>
+    <p class="section-kicker">Knowledge sits in pull requests, tickets and engineers' heads. Docs arrive after the customer needs them.</p>
+
+    <div class="callout coral">
+      <div class="callout-label">Problem statement</div>
+      <div class="callout-body">Tessellate's writers start each feature days after the code merges, rebuild context by hand, and catch style and precision problems late, in review. The result is documentation that lands after GA. Any AI that speeds this up must leave a clear record of the human decisions, or the team cannot trust what it publishes.</div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Failure</th><th>What happens today</th><th>Who feels it</th><th>Design response</th></tr>
+        <tr><td>Context arrives late</td><td>The doc ticket is filed after merge. The writer rebuilds intent from the PR, Slack and the engineer's memory.</td><td>Anika, Claire</td><td>Intake and Research agents start from the PR itself and ask at most three questions</td></tr>
+        <tr><td>Style checked by eye</td><td>House-style slips reach the SME, who spends review time on wording.</td><td>Ravi, Helen</td><td>Compliance Agent before review, and the same rules in Vale on the pull request</td></tr>
+        <tr><td>Vague specs</td><td>"Reasonable", "quickly" and "large" reach engineering, and engineers guess.</td><td>Tomás, Ravi</td><td>Ambiguity Detector in P2 mode, run as a separate critic</td></tr>
+        <tr><td>Two formats</td><td>The Docusaurus pilot needs MDX. Writers copy content by hand from DITA.</td><td>All writers</td><td>One structured draft, two emitters: DITA 1.3 and MDX</td></tr>
+        <tr><td>Invisible review</td><td>Nothing records who checked a topic. An AI draft would make this worse.</td><td>Helen, Jordan</td><td>Two mandatory gates and a decision log carried into the pull request</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 04 ============ -->
+  <section class="section" id="s4">
+    <h2 class="section-heading"><span class="section-num">04</span> As-Is DDLC</h2>
+    <p class="section-kicker">One TessOS feature, from merge to publication, as it runs today.</p>
+
+    <p class="body-text">The timeline follows one feature: EVPN IP prefix routes (route type 5, defined in RFC 9136 <sup class="ref"><a href="#src-5">[5]</a></sup>) for tenant VRFs. Day counts are illustrative, drawn from the pattern the team describes rather than measured. The red bars are the delays this design targets.</p>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 4.1 — As-Is Documentation Lifecycle, One Feature</div>
+      <div class="figure-sublabel">Days after the pull request merges. Red = waiting or rework. The dashed line is release GA.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 330" width="100%" role="img" aria-label="Timeline: docs are published around day 10, five days after GA on day 5.">
+          <g class="dtext-sm" font-size="9.5">
+            <text x="140" y="20" text-anchor="middle">0</text><text x="260" y="20" text-anchor="middle">2</text><text x="380" y="20" text-anchor="middle">4</text><text x="500" y="20" text-anchor="middle">6</text><text x="620" y="20" text-anchor="middle">8</text><text x="740" y="20" text-anchor="middle">10</text>
+          </g>
+          <g stroke="var(--border)" stroke-width="1">
+            <line x1="140" y1="28" x2="140" y2="300"/><line x1="260" y1="28" x2="260" y2="300"/><line x1="380" y1="28" x2="380" y2="300"/><line x1="500" y1="28" x2="500" y2="300"/><line x1="620" y1="28" x2="620" y2="300"/><line x1="740" y1="28" x2="740" y2="300"/>
+          </g>
+          <g class="dtext" font-size="11.5">
+            <text x="10" y="62">Engineering</text><text x="10" y="114">Product</text><text x="10" y="166">Writer</text><text x="10" y="218">SME review</text><text x="10" y="270">Publishing</text>
+          </g>
+          <circle cx="140" cy="58" r="6" class="dbox-ext"/><text x="152" y="62" class="dtext-sm" font-size="9.5">PR merged</text>
+          <rect x="176" y="96" width="48" height="26" rx="4" class="dbox"/><text x="232" y="113" class="dtext-sm" font-size="9.5">doc ticket filed (day 1)</text>
+          <rect x="200" y="148" width="150" height="26" rx="4" class="dbox-bad"/><text x="275" y="165" text-anchor="middle" class="dtext-bad" font-size="9.5">chasing context</text>
+          <rect x="350" y="148" width="90" height="26" rx="4" class="dbox"/><text x="395" y="165" text-anchor="middle" class="dtext-sm" font-size="9.5">drafting</text>
+          <rect x="440" y="200" width="90" height="26" rx="4" class="dbox-human"/><text x="485" y="217" text-anchor="middle" class="dtext-sm" font-size="9.5">round 1</text>
+          <rect x="530" y="148" width="30" height="26" rx="4" class="dbox-bad"/>
+          <rect x="560" y="200" width="90" height="26" rx="4" class="dbox-human"/><text x="605" y="217" text-anchor="middle" class="dtext-sm" font-size="9.5">round 2</text>
+          <rect x="650" y="148" width="30" height="26" rx="4" class="dbox-bad"/><text x="545" y="190" text-anchor="middle" class="dtext-bad" font-size="9">rework</text><text x="665" y="190" text-anchor="middle" class="dtext-bad" font-size="9">rework</text>
+          <text x="560" y="245" text-anchor="middle" class="dtext-bad" font-size="9">style slips found by eye</text>
+          <rect x="710" y="252" width="66" height="26" rx="4" class="dbox"/><text x="743" y="294" text-anchor="middle" class="dtext-sm" font-size="9.5">WebHelp build</text>
+          <line x1="440" y1="28" x2="440" y2="300" stroke="var(--coral)" stroke-width="1.5" stroke-dasharray="5 4"/>
+          <text x="446" y="42" class="dtext-bad" font-size="10">release GA, day 5</text>
+          <path d="M440,312 L776,312" class="darrow-bad"/>
+          <text x="608" y="326" text-anchor="middle" class="dtext-bad" font-size="10">customers without docs: ~5 days</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Stage</th><th>Today</th><th>Missing</th></tr>
+        <tr><td>Hand-off</td><td>Ticket filed after merge</td><td>No trigger on the merge itself</td></tr>
+        <tr><td>Context</td><td>Slack, meetings, reading the diff</td><td>No structured brief, no record of open questions</td></tr>
+        <tr><td>Drafting</td><td>From a blank DITA template</td><td>No first draft, no link from claims back to the PR</td></tr>
+        <tr><td>Style</td><td>Checked by the writer and the SME, by eye</td><td>No automated check before review</td></tr>
+        <tr><td>Specs (P2)</td><td>Reviewed by engineering only</td><td>No ambiguity check before hand-off</td></tr>
+        <tr><td>Approval</td><td>An email or a comment</td><td>No required approver, no audit trail</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 05 ============ -->
+  <section class="section" id="s5">
+    <h2 class="section-heading"><span class="section-num">05</span> Cost of the Gap</h2>
+    <p class="section-kicker">Two published findings, then one modelled estimate with every assumption stated.</p>
+
+    <h3 class="subsection-heading">Published evidence</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Finding</th><th>Source</th><th>Why it matters here</th></tr>
+        <tr><td>Documentation quality amplifies technical practices. In DORA's 2022 data, continuous integration lifted organizational performance by 34% for teams with below-average docs and by 750% for teams with above-average docs.</td><td>DORA, documentation quality capability <sup class="ref"><a href="#src-1">[1]</a></sup></td><td>Tessellate's engineering investment pays off less when its docs lag.</td></tr>
+        <tr><td>More than 60% of developers spend 30 minutes or more a day searching for answers, and 30% say knowledge silos hit their productivity ten or more times a week.</td><td>Stack Overflow 2024 Developer Survey <sup class="ref"><a href="#src-2">[2]</a></sup></td><td>Field engineers and customers pay this search cost when a feature ships without a topic.</td></tr>
+      </table>
+    </div>
+
+    <h3 class="subsection-heading">Illustrative model for Tessellate</h3>
+    <p class="body-text">This model counts writer time lost to context gathering. It does not count customer or field-engineer time, which is real but harder to model honestly. Every input is an assumption, labelled as such.</p>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Input</th><th>Value</th><th>Basis</th></tr>
+        <tr><td>Documented features per year</td><td>180</td><td>45 per release × 4 releases <span class="badge amber">assumption</span></td></tr>
+        <tr><td>Context gathering per feature</td><td>2.5 writer-days</td><td>Team's described pattern, Fig. 4.1 <span class="badge amber">assumption</span></td></tr>
+        <tr><td>Writer-days spent on context</td><td>450 per year</td><td>180 × 2.5</td></tr>
+        <tr><td>Loaded cost per writer-day</td><td>$520</td><td>$130,000 loaded salary ÷ 250 working days <span class="badge amber">assumption</span></td></tr>
+        <tr class="highlight"><td>Annual cost of context gathering</td><td>$234,000</td><td>450 × $520</td></tr>
+        <tr><td>Share the pipeline could recover</td><td>60%</td><td>Brief and first draft arrive with the PR; questions remain <span class="badge amber">assumption</span></td></tr>
+        <tr class="highlight"><td>Writer capacity returned per year</td><td>~$140,000 (270 writer-days)</td><td>$234,000 × 0.6</td></tr>
+      </table>
+    </div>
+    <div class="callout amber">
+      <div class="callout-label">How to read this</div>
+      <div class="callout-body">The $140,000 is capacity, not a cash saving. The point is that writers spend those days on review, on the specs that need judgment, and on the topics the field asks for. Section 12 shows that the running cost of the pipeline is a rounding error by comparison, so the real cost to manage is reviewer time.</div>
+    </div>
+    <div class="figure">
+      <div class="figure-label">Fig. 5.1 — Writer Time Lost vs. Time Returned</div>
+      <div class="figure-sublabel">Annual, illustrative. Solid bars are modelled from the stated assumptions; the dotted bar is the running cost from §12, drawn to the same scale.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 170" width="100%" role="img" aria-label="Bar chart: $234k lost to context gathering, $140k returned, under $100 inference.">
+          <line x1="250" y1="12" x2="250" y2="140" stroke="var(--border2)"/>
+          <text x="20" y="38" class="dtext-sm" font-size="10">Context gathering today</text>
+          <rect x="250" y="22" width="530" height="26" fill="var(--coral-bg)" stroke="var(--coral)"/>
+          <text x="262" y="40" class="dtext" font-size="11" fill="var(--coral)">$234,000 · 450 writer-days</text>
+          <text x="20" y="86" class="dtext-sm" font-size="10">Capacity returned (60%)</text>
+          <rect x="250" y="70" width="318" height="26" fill="var(--teal-bg)" stroke="var(--teal)"/>
+          <text x="262" y="88" class="dtext" font-size="11" fill="var(--teal)">~$140,000 · 270 writer-days</text>
+          <text x="20" y="128" class="dtext-sm" font-size="10">Inference, 10× headroom</text>
+          <rect x="250" y="116" width="2" height="18" fill="var(--purple)" stroke="var(--purple)" stroke-dasharray="2 2"/>
+          <text x="262" y="130" class="dtext" font-size="11" fill="var(--purple)">~$84 · too small to draw at this scale</text>
+          <text x="250" y="160" class="dtext-sm" font-size="9" text-anchor="middle">$0</text>
+          <text x="780" y="160" class="dtext-sm" font-size="9" text-anchor="end">$234k</text>
+        </svg>
+      </div>
+      <div class="figure-note">Capacity, not cash: the returned days go to review, specs, and field requests.</div>
+    </div>
+  </section>
+
+  <!-- ============ 06 ============ -->
+  <section class="section" id="s6">
+    <h2 class="section-heading"><span class="section-num">06</span> User Stories</h2>
+    <p class="section-kicker">Eight stories. Each has acceptance criteria that the evaluation harness or the pull request can check.</p>
+
+    <div class="us-card"><div class="us-id">US-01 · Anika · P1</div><div class="us-story">As a release writer, I want to paste a merged pull request and get a DITA task topic and an MDX page, so that I start from a grounded draft on the day the code lands.</div><div class="us-ac"><strong>Accept when:</strong> both files validate (DITA-OT and the Docusaurus build pass); every command in the draft appears in the PR or is marked <code>[REQUIRES INPUT]</code>; a reasoning card exists for each agent.</div></div>
+    <div class="us-card"><div class="us-id">US-02 · Anika · P1</div><div class="us-story">As a release writer, I want an update mode for an existing topic, so that a new optional parameter changes only the steps it affects.</div><div class="us-ac"><strong>Accept when:</strong> the output is a diff against the existing topic; unchanged elements keep their IDs, so conrefs and keys still resolve.</div></div>
+    <div class="us-card"><div class="us-id">US-03 · Anika · P1</div><div class="us-story">As a writer, I want to run only the compliance check on a legacy topic, so that I can clean up old content without generating anything new.</div><div class="us-ac"><strong>Accept when:</strong> every violation cites a rule ID, an excerpt and a suggested fix; no text is rewritten until I accept a fix.</div></div>
+    <div class="us-card p2"><div class="us-id">US-04 · Tomás · P2</div><div class="us-story">As a spec author, I want vague quantifiers, undefined terms and missing failure paths flagged, so that engineering builds from exact requirements.</div><div class="us-ac"><strong>Accept when:</strong> seeded vague terms are flagged at ≥88% recall on the P2 fixtures; HIGH flags block export until I resolve them or dismiss them with a reason.</div></div>
+    <div class="us-card p2"><div class="us-id">US-05 · Tomás · P2</div><div class="us-story">As a spec author, I want the draft to leave a visible placeholder when it lacks a fact, so that nothing in the spec is guessed.</div><div class="us-ac"><strong>Accept when:</strong> every detected context gap becomes exactly one <code>[REQUIRES INPUT: reason]</code> placeholder; placeholder fidelity on fixtures is 1.00.</div></div>
+    <div class="us-card"><div class="us-id">US-06 · Ravi · gate 2</div><div class="us-story">As the code owner for routing docs, I want the pull request to show what the AI drafted and what the writer changed, so that I review the substance and not the wording.</div><div class="us-ac"><strong>Accept when:</strong> the PR includes the run log; the PR description lists the writer's decisions on every HIGH item; merge is blocked until a code owner approves.</div></div>
+    <div class="us-card"><div class="us-id">US-07 · Helen · rules</div><div class="us-story">As the owner of the house style, I want one rule change to update both the in-app check and the CI check, so that writers never see two different verdicts.</div><div class="us-ac"><strong>Accept when:</strong> each rule in <code>rules.json</code> maps to one Vale rule with the same ID; a rule without positive and negative fixtures fails CI.</div></div>
+    <div class="us-card"><div class="us-id">US-08 · Sam · release</div><div class="us-story">As the release manager, I want to see which features in a release have no approved topic, so that docs gaps are visible before GA.</div><div class="us-ac"><strong>Accept when:</strong> open documentation PRs carry a release label, and the list of unmerged ones serves as the gap report.</div></div>
+  </section>
+
+  <!-- ============ 07 ============ -->
+  <section class="section" id="s7">
+    <h2 class="section-heading"><span class="section-num">07</span> Proposed Design</h2>
+    <p class="section-kicker">Six agents draft and check. Two human gates decide. Git keeps the record.</p>
+
+    <h3 class="subsection-heading">Design principles</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Principle</th><th>What it rules out</th></tr>
+        <tr><td>P-1 · The writer is the author</td><td>Any path from draft to publication that skips a human decision</td></tr>
+        <tr><td>P-2 · Every agent explains itself</td><td>An agent that passes output on without a reasoning card</td></tr>
+        <tr><td>P-3 · Rules are data, not memory</td><td>A style verdict that cannot cite a rule ID from a versioned file</td></tr>
+        <tr><td>P-4 · Gaps stay visible</td><td>A draft that fills a missing fact with a plausible guess</td></tr>
+        <tr><td>P-5 · Fit Tessellate's existing rails</td><td>A new CMS, a new editor, or a change to how the team publishes</td></tr>
+      </table>
+    </div>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 7.1 — Layered Architecture</div>
+      <div class="figure-sublabel">Teal = agents (LLM calls). Blue = deterministic code. Amber = human gates. Only the agent layer talks to the model API.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 460" width="100%" role="img" aria-label="Six layers from writer workspace to publishing, with two human gates.">
+          <defs><marker id="ar7" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 Z" class="arrowhead"/></marker></defs>
+          <rect x="5" y="8" width="675" height="62" rx="6" class="dband"/>
+          <text x="16" y="32" class="dtext" font-size="11.5" font-weight="600">Writer workspace</text><text x="16" y="48" class="dtext-sm" font-size="9">browser app</text>
+          <rect x="140" y="20" width="120" height="38" rx="5" class="dbox"/><text x="200" y="43" text-anchor="middle" class="dtext" font-size="10.5">Intake form</text>
+          <rect x="270" y="20" width="130" height="38" rx="5" class="dbox"/><text x="335" y="43" text-anchor="middle" class="dtext" font-size="10.5">Pipeline monitor</text>
+          <rect x="410" y="20" width="120" height="38" rx="5" class="dbox"/><text x="470" y="43" text-anchor="middle" class="dtext" font-size="10.5">Review UI</text>
+          <rect x="545" y="16" width="128" height="46" rx="5" class="dbox-human"/><text x="609" y="36" text-anchor="middle" class="dtext" font-size="10.5" font-weight="600">Gate 1</text><text x="609" y="51" text-anchor="middle" class="dtext-hum" font-size="9">writer decides</text>
+
+          <rect x="5" y="84" width="675" height="74" rx="6" class="dband"/>
+          <text x="16" y="110" class="dtext" font-size="11.5" font-weight="600">Agent pipeline</text><text x="16" y="126" class="dtext-sm" font-size="9">6 agents · fixed</text>
+          <rect x="135" y="98" width="82" height="46" rx="5" class="dbox-agent"/><text x="176" y="118" text-anchor="middle" class="dtext" font-size="10">A-01</text><text x="176" y="133" text-anchor="middle" class="dtext-sm" font-size="9">Intake</text>
+          <rect x="223" y="98" width="82" height="46" rx="5" class="dbox-agent"/><text x="264" y="118" text-anchor="middle" class="dtext" font-size="10">A-02</text><text x="264" y="133" text-anchor="middle" class="dtext-sm" font-size="9">Research</text>
+          <rect x="311" y="98" width="82" height="46" rx="5" class="dbox-agent"/><text x="352" y="118" text-anchor="middle" class="dtext" font-size="10">A-03</text><text x="352" y="133" text-anchor="middle" class="dtext-sm" font-size="9">Draft</text>
+          <rect x="399" y="98" width="82" height="46" rx="5" class="dbox-p2"/><text x="440" y="118" text-anchor="middle" class="dtext" font-size="10">A-04</text><text x="440" y="133" text-anchor="middle" class="dtext-sm" font-size="9">Ambiguity · P2</text>
+          <rect x="487" y="98" width="82" height="46" rx="5" class="dbox-agent"/><text x="528" y="118" text-anchor="middle" class="dtext" font-size="10">A-05</text><text x="528" y="133" text-anchor="middle" class="dtext-sm" font-size="9">Compliance</text>
+          <rect x="575" y="98" width="98" height="46" rx="5" class="dbox-agent"/><text x="624" y="118" text-anchor="middle" class="dtext" font-size="10">A-06</text><text x="624" y="133" text-anchor="middle" class="dtext-sm" font-size="9">Review Prep</text>
+          <path d="M624,98 L612,64" class="darrow-hum" marker-end="url(#ar7)"/>
+          <rect x="700" y="96" width="112" height="50" rx="5" class="dbox-ext"/><text x="756" y="117" text-anchor="middle" class="dtext" font-size="10.5">Model API</text><text x="756" y="132" text-anchor="middle" class="dtext-sm" font-size="9">Groq · writer's key</text>
+          <path d="M682,121 L698,121" class="darrow" marker-end="url(#ar7)"/>
+
+          <rect x="5" y="172" width="675" height="54" rx="6" class="dband"/>
+          <text x="16" y="196" class="dtext" font-size="11.5" font-weight="600">Emitters</text><text x="16" y="212" class="dtext-sm" font-size="9">code, no LLM</text>
+          <rect x="140" y="182" width="190" height="34" rx="5" class="dbox-ext"/><text x="235" y="203" text-anchor="middle" class="dtext" font-size="10.5">DITA 1.3 topic + map entry</text>
+          <rect x="345" y="182" width="190" height="34" rx="5" class="dbox-ext"/><text x="440" y="203" text-anchor="middle" class="dtext" font-size="10.5">MDX page + front matter</text>
+          <path d="M609,62 C700,120 690,190 538,199" class="darrow-hum" marker-end="url(#ar7)"/>
+          <text x="690" y="185" class="dtext-hum" font-size="9">on approval</text>
+
+          <rect x="5" y="240" width="675" height="60" rx="6" class="dband"/>
+          <text x="16" y="264" class="dtext" font-size="11.5" font-weight="600">Docs repository</text><text x="16" y="280" class="dtext-sm" font-size="9">Git · branch per run</text>
+          <g class="dtext-sm" font-size="9.5">
+            <rect x="140" y="252" width="100" height="36" rx="4" class="dbox"/><text x="190" y="274" text-anchor="middle">topics/*.dita</text>
+            <rect x="248" y="252" width="100" height="36" rx="4" class="dbox"/><text x="298" y="274" text-anchor="middle">docs/*.mdx</text>
+            <rect x="356" y="252" width="100" height="36" rx="4" class="dbox"/><text x="406" y="274" text-anchor="middle">rules/ · prompts/</text>
+            <rect x="464" y="252" width="110" height="36" rx="4" class="dbox-human"/><text x="519" y="274" text-anchor="middle">.taa/runs/*.json</text>
+          </g>
+          <path d="M335,218 L335,250" class="darrow" marker-end="url(#ar7)"/>
+
+          <rect x="5" y="314" width="675" height="62" rx="6" class="dband"/>
+          <text x="16" y="338" class="dtext" font-size="11.5" font-weight="600">Pull request CI</text><text x="16" y="354" class="dtext-sm" font-size="9">GitHub Actions</text>
+          <g class="dtext-sm" font-size="9.5">
+            <rect x="140" y="326" width="80" height="36" rx="4" class="dbox-ext"/><text x="180" y="348" text-anchor="middle">Vale</text>
+            <rect x="226" y="326" width="90" height="36" rx="4" class="dbox-ext"/><text x="271" y="348" text-anchor="middle">DITA-OT check</text>
+            <rect x="322" y="326" width="96" height="36" rx="4" class="dbox-ext"/><text x="370" y="348" text-anchor="middle">Docusaurus build</text>
+            <rect x="424" y="326" width="96" height="36" rx="4" class="dbox-ext"/><text x="472" y="348" text-anchor="middle">run-log check</text>
+          </g>
+          <rect x="545" y="322" width="128" height="46" rx="5" class="dbox-human"/><text x="609" y="342" text-anchor="middle" class="dtext" font-size="10.5" font-weight="600">Gate 2</text><text x="609" y="357" text-anchor="middle" class="dtext-hum" font-size="9">code owner approves</text>
+          <path d="M335,290 L335,324" class="darrow" marker-end="url(#ar7)"/>
+          <path d="M522,344 L543,344" class="darrow" marker-end="url(#ar7)"/>
+
+          <rect x="5" y="390" width="675" height="58" rx="6" class="dband"/>
+          <text x="16" y="414" class="dtext" font-size="11.5" font-weight="600">Publishing</text><text x="16" y="430" class="dtext-sm" font-size="9">after merge only</text>
+          <rect x="140" y="402" width="190" height="34" rx="5" class="dbox"/><text x="235" y="423" text-anchor="middle" class="dtext" font-size="10.5">WebHelp (Oxygen / DITA-OT)</text>
+          <rect x="345" y="402" width="190" height="34" rx="5" class="dbox"/><text x="440" y="423" text-anchor="middle" class="dtext" font-size="10.5">Docusaurus portal</text>
+          <path d="M609,370 L540,404" class="darrow" marker-end="url(#ar7)"/>
+        </svg>
+      </div>
+    </div>
+
+    <h3 class="subsection-heading" id="s7-hitl">Where the humans are</h3>
+    <p class="body-text">This table is the core of version 2. It lists every point where a person decides, what they see when they decide, and what the record keeps. The pipeline drafts, checks and sorts. It never approves.</p>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Decision point</th><th>Who</th><th>What they see</th><th>What they can do</th><th>What is recorded</th></tr>
+        <tr><td>Start a run</td><td>Writer</td><td>Detected doc type, persona (P1/P2), source PR or spec</td><td>Confirm or correct the doc type and mode</td><td>Source link, mode, writer ID</td></tr>
+        <tr><td>Clarify</td><td>Writer, or the PM or SME they forward to</td><td>Up to three questions from the Research Agent</td><td>Answer, forward, or skip (a skip becomes a placeholder)</td><td>Question, answer, who answered</td></tr>
+        <tr class="highlight"><td>Gate 1 · review</td><td>Writer</td><td>Draft with inline flags, reasoning cards, confidence per agent</td><td>Accept, edit, or dismiss each flag with a reason; export stays locked until every HIGH item has a decision</td><td>One <code>HumanDecision</code> per flag</td></tr>
+        <tr class="highlight"><td>Gate 2 · pull request</td><td>Code owner (SME) for the path</td><td>File diff, Vale results, build status, run-log summary in the PR description</td><td>Approve or request changes; merge is blocked without approval</td><td>GitHub review record</td></tr>
+        <tr><td>Change a style rule</td><td>Director of Documentation</td><td>Rule diff, fixture results, false-positive rate</td><td>Approve the rules PR</td><td>Rules version, stamped on every later run</td></tr>
+        <tr><td>Change a prompt or model</td><td>Docs tools engineer, then the Director</td><td>Eval harness scores on all eight dimensions</td><td>Promote, tune, or hold</td><td>Prompt and model versions, stamped on every later run</td></tr>
+      </table>
+    </div>
+    <div class="callout teal">
+      <div class="callout-label">Why the run log goes into Git</div>
+      <div class="callout-body">Each approved run commits a small JSON file to <code>.taa/runs/</code> on the same branch as the topic. It holds the reasoning cards and every <code>HumanDecision</code>. The record therefore travels with the content, survives a cleared browser, and reaches the code owner without a separate tool. A CI job fails the pull request if any HIGH flag in the log has no decision.</div>
+    </div>
+
+    <h3 class="subsection-heading" id="s7-agents">Agents</h3>
+    <div class="pipeline-steps">
+      <div class="pipe-step"><div class="pipe-num">A-01</div><div class="pipe-name">Intake</div><div class="pipe-owner">PR or spec → DocBrief</div></div>
+      <div class="pipe-step"><div class="pipe-num">A-02</div><div class="pipe-name">Research</div><div class="pipe-owner">gaps and ≤3 questions</div></div>
+      <div class="pipe-step"><div class="pipe-num">A-03</div><div class="pipe-name">Draft</div><div class="pipe-owner">P1 task · P2 spec</div></div>
+      <div class="pipe-step"><div class="pipe-num">A-04</div><div class="pipe-name">Ambiguity</div><div class="pipe-owner">critic · P2 only</div></div>
+      <div class="pipe-step"><div class="pipe-num">A-05</div><div class="pipe-name">Compliance</div><div class="pipe-owner">rules.json, cited</div></div>
+      <div class="pipe-step" style="background:var(--amber-bg)"><div class="pipe-num">A-06 + gate 1</div><div class="pipe-name">Review Prep</div><div class="pipe-owner">sorts flags, locks export</div></div>
+      <div class="pipe-step" style="background:var(--blue-bg)"><div class="pipe-num">emit + gate 2</div><div class="pipe-name">DITA · MDX · PR</div><div class="pipe-owner">code owner approves</div></div>
+    </div>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Agent</th><th>Input → output</th><th>Temp.</th><th>Never does</th></tr>
+        <tr><td>A-01 Intake</td><td>PR text, diff summary, ticket → <code>DocBrief</code> (doc type, audience, feature, mode)</td><td>0.1</td><td>Fill a field it cannot extract; it returns null and says so</td></tr>
+        <tr><td>A-02 Research</td><td><code>DocBrief</code> → <code>ContextPack</code> with gap flags</td><td>0.2</td><td>Block the run; gaps continue as flags</td></tr>
+        <tr><td>A-03 Draft</td><td><code>ContextPack</code> → <code>DraftDocument</code> (structured JSON, not prose)</td><td>0.3 P1 · 0.1 P2</td><td>Invent a command, value or limit; it writes <code>[REQUIRES INPUT]</code></td></tr>
+        <tr><td>A-04 Ambiguity</td><td><code>DraftDocument</code> → <code>AmbiguityReport</code></td><td>0.1</td><td>Edit the draft; it only critiques</td></tr>
+        <tr><td>A-05 Compliance</td><td><code>DraftDocument</code> + <code>rules.json</code> → <code>ComplianceReport</code></td><td>0.1</td><td>Report a violation without a rule ID, excerpt and fix</td></tr>
+        <tr><td>A-06 Review Prep</td><td>All reports → <code>ReviewBundle</code></td><td>none</td><td>Generate content; it sorts, annotates and locks</td></tr>
+      </table>
+    </div>
+    <p class="body-text">Compliance runs in three passes. Pattern rules (for example, Latin abbreviations) run as regular expressions in the browser with no model call. Structural rules check that required elements exist: a task needs a <code>prereq</code>, <code>steps</code> and a <code>result</code>. Only the remaining semantic rules, such as passive voice in long sentences, go to the model.</p>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 7.2 — Reasoning Card, as the Writer Sees It</div>
+      <div class="figure-sublabel">One card per agent, shown in the pipeline monitor before the next agent runs, and saved in the run log.</div>
+      <div class="figure-body">
+        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span class="adr-id">A-03 Draft · P1 · prompt draft-p1@2.1.0</span><span class="badge amber">agent-estimated confidence 0.81</span></div>
+        <div class="adr-row"><strong>Understood:</strong> PR #4182 adds type 5 route advertisement per VRF. The new command and its show command appear in the diff and the PR description.</div>
+        <div class="adr-row"><strong>Decided:</strong> A DITA task with two steps and a verification result, plus a concept link to the existing EVPN overview.</div>
+        <div class="adr-row"><strong>Why:</strong> The brief asks "how do I enable it", which is a procedure. The concept already exists, so the draft links to it with a key instead of repeating it.</div>
+        <div class="adr-row"><strong>Uncertain:</strong> The PR says "supports up to 512k prefixes", but no test or spec in the context backs the number. Left as <code>[REQUIRES INPUT: verified prefix scale]</code>.</div>
+      </div>
+    </div>
+
+    <h3 class="subsection-heading">Data model</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Entity</th><th>Created by</th><th>Key fields</th></tr>
+        <tr><td>DocBrief</td><td>A-01</td><td>doc_type (task · concept · reference · spec), persona, mode, feature, source_url</td></tr>
+        <tr><td>ContextPack</td><td>A-02</td><td>facts[] with source span, gap_flags[], questions[], answers[]</td></tr>
+        <tr><td>DraftDocument</td><td>A-03</td><td>title, shortdesc, prereqs[], steps[] (cmd, code, info), result, placeholders[], keyrefs[]</td></tr>
+        <tr><td>AmbiguityReport</td><td>A-04 (P2)</td><td>flags[] (term, category, location, severity, suggestion)</td></tr>
+        <tr><td>ComplianceReport</td><td>A-05</td><td>rules_version, violations[] (rule_id, excerpt, fix, severity)</td></tr>
+        <tr><td>ReasoningCard</td><td>every agent</td><td>understood, decided, why, uncertain[], confidence, prompt_version</td></tr>
+        <tr><td>HumanDecision</td><td>the writer, at gate 1</td><td>flag_id, action (accept · edit · dismiss), reason, user, timestamp</td></tr>
+        <tr><td>RunLog</td><td>Review Prep, on approval</td><td>all of the above, plus model and rules versions; committed to <code>.taa/runs/</code></td></tr>
+      </table>
+    </div>
+
+    <h3 class="subsection-heading" id="s7-outputs">Outputs: one draft, two formats</h3>
+    <p class="body-text">The Draft Agent never writes XML or MDX. It writes a structured <code>DraftDocument</code>, and two small emitters turn that into files. This keeps both outputs in step, lets the emitters be unit-tested like any code, and means a schema error can never come from the model. The DITA topic stays the source of truth because Tessellate's corpus, keys and conrefs already live in DITA, and DITA-OT supports DITA 1.3 <sup class="ref"><a href="#src-8">[8]</a></sup>.</p>
+    <div class="code-cap">topics/routing/evpn-ip-prefix-enable.dita · DITA 1.3 task</div>
+<div class="code-block">&lt;task id="evpn-ip-prefix-enable"&gt;
+  &lt;title&gt;Enable EVPN IP prefix routes for a VRF&lt;/title&gt;
+  &lt;shortdesc&gt;Advertise a tenant VRF's IP prefixes as EVPN route type 5.&lt;/shortdesc&gt;
+  &lt;taskbody&gt;
+    &lt;prereq&gt;&lt;p&gt;The fabric runs EVPN with VXLAN encapsulation. See &lt;xref keyref="evpn-overview"/&gt;.&lt;/p&gt;&lt;/prereq&gt;
+    &lt;steps&gt;
+      &lt;step&gt;&lt;cmd&gt;Enable prefix advertisement for the VRF.&lt;/cmd&gt;
+        &lt;info&gt;&lt;codeblock&gt;tessctl set evpn vrf tenant-blue ip-prefix-routes enabled&lt;/codeblock&gt;&lt;/info&gt;&lt;/step&gt;
+      &lt;step&gt;&lt;cmd&gt;Check that the switch advertises type 5 routes.&lt;/cmd&gt;
+        &lt;info&gt;&lt;codeblock&gt;tessctl show evpn routes type 5 vrf tenant-blue&lt;/codeblock&gt;&lt;/info&gt;&lt;/step&gt;
+    &lt;/steps&gt;
+    &lt;result&gt;&lt;p&gt;Remote leaf switches install the prefixes in the tenant VRF.&lt;/p&gt;&lt;/result&gt;
+  &lt;/taskbody&gt;
+&lt;/task&gt;</div>
+    <div class="code-cap" style="margin-top:14px">docs/routing/evpn-ip-prefix-enable.mdx · Docusaurus</div>
+<div class="code-block">---
+title: Enable EVPN IP prefix routes for a VRF
+description: Advertise a tenant VRF's IP prefixes as EVPN route type 5.
+tags: [evpn, vxlan, tessos-4.2]
+---
+
+:::note Prerequisite
+The fabric runs EVPN with VXLAN encapsulation. See [EVPN overview](./evpn-overview.mdx).
+:::
+
+1. Enable prefix advertisement for the VRF.
+
+   ```bash
+   tessctl set evpn vrf tenant-blue ip-prefix-routes enabled
+   ```
+
+2. Check that the switch advertises type 5 routes.
+
+   ```bash
+   tessctl show evpn routes type 5 vrf tenant-blue
+   ```
+
+Remote leaf switches install the prefixes in the tenant VRF.</div>
+
+    <h3 class="subsection-heading">Docs-as-code gate</h3>
+    <p class="body-text">The writer downloads the approved files and the run log, commits them to a branch, and opens the pull request with the generated description. The app holds no Git credentials (ADR-09). GitHub requests review from the code owners of the changed paths, and with "Require review from Code Owners" turned on in branch protection, the pull request cannot merge until a code owner approves <sup class="ref"><a href="#src-14">[14]</a></sup>.</p>
+<div class="code-block"><span class="c"># .github/CODEOWNERS</span>
+/topics/routing/   @tessellate/routing-sme
+/docs/routing/     @tessellate/routing-sme
+/rules/            @hmarsh
+/prompts/          @tessellate/docs-tools
+
+<span class="c"># .github/workflows/docs-ci.yml (jobs on every pull request)</span>
+<span class="k">vale</span>       lint topics/ and docs/ with the Tessellate style (same rule IDs as rules.json)
+<span class="k">dita</span>       validate the map and topics with DITA-OT
+<span class="k">portal</span>     build the Docusaurus site from docs/
+<span class="k">links</span>      check internal keys and external links
+<span class="k">run-log</span>    <span class="w">fail if a HIGH flag in .taa/runs/*.json has no human decision</span></div>
+    <p class="body-text" style="margin-top:1rem">Vale is an open-source prose linter that runs in CI <sup class="ref"><a href="#src-13">[13]</a></sup>. The Tessellate package starts from the community implementation of the Google developer documentation style guide <sup class="ref"><a href="#src-11">[11]</a></sup><sup class="ref"><a href="#src-12">[12]</a></sup> and adds Tessellate's own rules. Each Vale rule carries the same ID as its entry in <code>rules.json</code>, so a writer sees the same verdict in the app and in CI.</p>
+
+    <h3 class="subsection-heading" id="s7-mlops">MLOps for a prompt-governed pipeline</h3>
+    <p class="body-text">The pipeline trains no model. Its behavior lives in six system prompts and one rules file, and both can drift or regress. They get the controls a trained model would get: versions, tests, and a promotion gate.</p>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Classic MLOps</th><th>Here</th></tr>
+        <tr><td>Model weights</td><td>System prompts in <code>prompts/</code>, semver, SHA-checked at load</td></tr>
+        <tr><td>Training data</td><td><code>rules.json</code>, with a positive and a negative fixture per rule</td></tr>
+        <tr><td>Test set</td><td>50 labelled fixtures: TessOS PRs, specs and legacy topics</td></tr>
+        <tr><td>Drift monitoring</td><td>Run logs in Git: override rate, flag counts, confidence over time</td></tr>
+        <tr><td>Promotion gate</td><td>All eight evaluation dimensions must pass</td></tr>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Evaluation dimension</th><th>Threshold</th><th>Type</th></tr>
+        <tr><td>D1 · Agent output matches its schema</td><td>= 1.00</td><td>blocking</td></tr>
+        <tr><td>D2 · Compliance recall on seeded violations</td><td>≥ 0.90</td><td>blocking</td></tr>
+        <tr><td>D3 · Compliance false-positive rate on clean topics</td><td>≤ 0.08</td><td>blocking</td></tr>
+        <tr><td>D4 · Ambiguity recall on seeded P2 specs</td><td>≥ 0.88</td><td>blocking</td></tr>
+        <tr><td>D5 · Placeholder fidelity (no guessed facts)</td><td>= 1.00</td><td>blocking</td></tr>
+        <tr><td>D6 · Reasoning card completeness</td><td>= 1.00</td><td>blocking</td></tr>
+        <tr><td>D7 · Emitted DITA validates and MDX builds</td><td>= 1.00</td><td>blocking</td></tr>
+        <tr><td>D8 · Agent time per run, p95</td><td>≤ 60 s</td><td>blocking</td></tr>
+      </table>
+    </div>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Model</th><th>Status on Groq</th><th>Role</th><th>Scores</th></tr>
+        <tr><td>llama-3.3-70b-versatile</td><td>Production model, 131,072-token context <sup class="ref"><a href="#src-17">[17]</a></sup></td><td>Baseline</td><td><span class="badge gray">to be measured in H1</span></td></tr>
+        <tr><td>openai/gpt-oss-120b</td><td>Production model, 131,072-token context <sup class="ref"><a href="#src-17">[17]</a></sup></td><td>Upgrade candidate</td><td><span class="badge gray">evaluate in H3</span></td></tr>
+      </table>
+    </div>
+    <p class="body-text">Version 1 named Llama 3.1 70B. That model ID no longer appears on Groq's model list, which is exactly why the model sits behind a provider adapter and a promotion gate. No scores appear above until the harness produces them.</p>
+
+    <h3 class="subsection-heading" id="s7-infra">Infrastructure and security</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Concern</th><th>Design</th></tr>
+        <tr><td>Hosting</td><td>Static app on GitHub Pages. No server of ours receives document content.</td></tr>
+        <tr><td>Model calls</td><td>From the browser to Groq with the writer's own key, only while a run is active</td></tr>
+        <tr><td>API key</td><td>Kept in <code>sessionStorage</code> by default and cleared when the tab closes. "Remember on this device" is opt-in.</td></tr>
+        <tr><td>Content Security Policy</td><td>Set with a <code>&lt;meta http-equiv&gt;</code> tag, because GitHub Pages does not let a site set custom response headers <sup class="ref"><a href="#src-16">[16]</a></sup>. <code>connect-src</code> allows only the model API.</td></tr>
+        <tr><td>Prompt integrity</td><td>SHA-256 of each prompt checked against <code>prompt-manifest.json</code> before a run starts</td></tr>
+        <tr><td>Telemetry</td><td>None. The audit trail is the run log in Git, which the team already controls.</td></tr>
+        <tr><td>Rendering model output</td><td>Parsed as JSON and inserted as text, never as HTML</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- ============ 08 ============ -->
+  <section class="section" id="s8">
+    <h2 class="section-heading"><span class="section-num">08</span> Simulation</h2>
+    <p class="section-kicker">Scripted and animated, with no model call and no API key in this page. It shows where the humans decide.</p>
+
+    <p class="body-text">Pick a scenario and run it. The dots show each stage: teal for an agent that finished, amber for a human decision, red for a stage that stopped the run, and dashed for a stage the mode skips. The amber panel under the log is the human-in-the-loop ledger: every decision, who made it, and why.</p>
+
+    <div class="sim-box">
+      <div class="sim-scenarios" role="tablist" aria-label="Scenarios">
+        <button class="scenario-btn active" id="scn-0" type="button">Anika · P1 · PR to DITA + MDX</button>
+        <button class="scenario-btn" id="scn-1" type="button">Tomás · P2 · vague spec</button>
+        <button class="scenario-btn" id="scn-2" type="button">Anika · legacy topic, style only</button>
+        <button class="scenario-btn" id="scn-3" type="button">Anika · unsupported claim</button>
+      </div>
+      <div class="sim-desc" id="sim-desc"></div>
+      <div class="sim-stages-wrap">
+        <div class="sim-stages">
+          <div class="sim-stage"><div class="stage-dot" id="dot-0"></div><div class="stage-name">Intake</div><div class="stage-owner">A-01</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-0"></div></div><div class="stage-timing" id="tim-0">—</div></div>
+          <div class="sim-stage"><div class="stage-dot" id="dot-1"></div><div class="stage-name">Research</div><div class="stage-owner">A-02</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-1"></div></div><div class="stage-timing" id="tim-1">—</div></div>
+          <div class="sim-stage"><div class="stage-dot" id="dot-2"></div><div class="stage-name">Draft</div><div class="stage-owner">A-03</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-2"></div></div><div class="stage-timing" id="tim-2">—</div></div>
+          <div class="sim-stage"><div class="stage-dot" id="dot-3"></div><div class="stage-name">Ambiguity</div><div class="stage-owner">A-04 · P2</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-3"></div></div><div class="stage-timing" id="tim-3">—</div></div>
+          <div class="sim-stage"><div class="stage-dot" id="dot-4"></div><div class="stage-name">Compliance</div><div class="stage-owner">A-05</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-4"></div></div><div class="stage-timing" id="tim-4">—</div></div>
+          <div class="sim-stage"><div class="stage-dot" id="dot-5"></div><div class="stage-name">Gate 1</div><div class="stage-owner">writer review</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-5"></div></div><div class="stage-timing" id="tim-5">—</div></div>
+          <div class="sim-stage"><div class="stage-dot" id="dot-6"></div><div class="stage-name">Gate 2</div><div class="stage-owner">emit · PR · owner</div><div class="stage-bar"><div class="stage-bar-fill" id="bar-6"></div></div><div class="stage-timing" id="tim-6">—</div></div>
+        </div>
+      </div>
+      <div class="sim-controls">
+        <button class="run-btn" id="run-btn" type="button">▶ Run simulation</button>
+        <span class="sim-status" id="sim-status">ready</span>
+      </div>
+      <div class="sim-output" id="sim-output" aria-live="polite"></div>
+      <div class="hitl-ledger">
+        <div class="callout-label">Human-in-the-loop ledger</div>
+        <div class="hitl-rows" id="hitl-rows"></div>
+      </div>
+    </div>
+    <p class="body-text" style="margin-top:1rem">Stage times show the scripted agent time for each stage. Human stages show the decision, not a duration, because review time belongs to the person and is measured separately in Section 9. The MAC-mobility suggestion in the Tomás scenario follows RFC 7432's N-moves-in-M-seconds detection <sup class="ref"><a href="#src-3">[3]</a></sup><sup class="ref"><a href="#src-6">[6]</a></sup>.</p>
+  </section>
+
+  <!-- ============ 09 ============ -->
+  <section class="section" id="s9">
+    <h2 class="section-heading"><span class="section-num">09</span> Success Metrics</h2>
+    <p class="section-kicker">Speed matters only if the record of human judgment stays complete.</p>
+
+    <h3 class="subsection-heading">Delivery</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Metric</th><th>Baseline</th><th>Target</th></tr>
+        <tr><td>PR merge to review-ready draft</td><td>~3.5 days <span class="badge amber">illustrative</span></td><td>Same working day</td></tr>
+        <tr><td>Features with an approved topic at GA</td><td>Not tracked</td><td>≥ 95% of documented features</td></tr>
+        <tr><td>SME review rounds per topic</td><td>~2 <span class="badge amber">illustrative</span></td><td>1, with wording issues fixed before review</td></tr>
+        <tr><td>Agent time per run (p95)</td><td>n/a</td><td>≤ 60 s (eval dimension D8)</td></tr>
+      </table>
+    </div>
+
+    <h3 class="subsection-heading">Quality</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Metric</th><th>Baseline</th><th>Target</th></tr>
+        <tr><td>HIGH style violations reaching gate 2</td><td>Not measured</td><td>0 (CI fails otherwise)</td></tr>
+        <tr><td>Seeded ambiguity caught in P2 specs</td><td>0% (no check exists)</td><td>≥ 88% (D4)</td></tr>
+        <tr><td>Guessed facts in drafts</td><td>n/a</td><td>0 (placeholder fidelity = 1.00, D5)</td></tr>
+        <tr><td>Field-reported errors per published topic</td><td>Tracked from H2</td><td>Downward trend per release</td></tr>
+      </table>
+    </div>
+
+    <h3 class="subsection-heading">Human oversight</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Metric</th><th>Target</th><th>Read it as</th></tr>
+        <tr><td>Published topics with a named approver</td><td>100%</td><td>Merge without a code owner is impossible by configuration</td></tr>
+        <tr><td>HIGH flags with a recorded decision</td><td>100%</td><td>Enforced by the run-log CI job</td></tr>
+        <tr><td>Writer override rate at gate 1</td><td>Watched, no target</td><td>A rate of zero across many runs is the warning sign. It suggests rubber-stamping.</td></tr>
+        <tr><td>Dismissals with a reason</td><td>100%</td><td>The reason text feeds the next rules review</td></tr>
+      </table>
+    </div>
+    <div class="figure">
+      <div class="figure-label">Fig. 9.1 — Oversight Dashboard, Two Lenses</div>
+      <div class="figure-sublabel">Illustrative trajectories over the pilot and rollout releases, not measured data. Both lenses read from run logs and pull-request records in Git.</div>
+      <div class="figure-body two-col" style="margin:0">
+        <div><div class="subsection-heading" style="margin-top:0">Helen — gate 1 override rate</div>
+          <svg viewBox="0 0 380 150" width="100%" role="img" aria-label="Override rate settles between 10 and 20 percent; zero is marked as a warning.">
+            <rect x="0" y="0" width="380" height="150" class="dbox"/>
+            <rect x="40" y="62" width="320" height="34" fill="var(--teal-bg)"/>
+            <text x="356" y="58" text-anchor="end" class="dtext-sm" font-size="8.5" fill="var(--teal)">healthy band 10–20%</text>
+            <polyline points="40,40 120,66 200,78 280,84 360,80" fill="none" stroke="var(--teal)" stroke-width="2"/>
+            <circle cx="360" cy="80" r="3.5" fill="var(--teal)"/>
+            <line x1="40" y1="130" x2="360" y2="130" stroke="var(--coral)" stroke-dasharray="3 3"/>
+            <text x="44" y="124" class="dtext-sm" font-size="8.5" fill="var(--coral)">0% = rubber-stamping warning</text>
+            <text x="40" y="146" class="dtext-sm" font-size="8">R1</text><text x="200" y="146" class="dtext-sm" font-size="8" text-anchor="middle">R3</text><text x="360" y="146" class="dtext-sm" font-size="8" text-anchor="end">R5</text>
+            <text x="12" y="22" class="dtext" font-size="11" font-weight="600" fill="var(--teal)">14%</text><text x="48" y="22" class="dtext-sm" font-size="8.5">latest release</text>
+          </svg></div>
+        <div><div class="subsection-heading" style="margin-top:0">Sam — features approved by GA</div>
+          <svg viewBox="0 0 380 150" width="100%" role="img" aria-label="Share of features approved by GA rises toward the 95 percent target.">
+            <rect x="0" y="0" width="380" height="150" class="dbox"/>
+            <line x1="40" y1="44" x2="360" y2="44" stroke="var(--amber)" stroke-dasharray="3 3"/>
+            <text x="356" y="38" text-anchor="end" class="dtext-sm" font-size="8.5" fill="var(--amber)">target 95%</text>
+            <polyline points="40,118 120,96 200,74 280,56 360,48" fill="none" stroke="var(--purple)" stroke-width="2"/>
+            <circle cx="360" cy="48" r="3.5" fill="var(--purple)"/>
+            <text x="40" y="146" class="dtext-sm" font-size="8">R1</text><text x="200" y="146" class="dtext-sm" font-size="8" text-anchor="middle">R3</text><text x="360" y="146" class="dtext-sm" font-size="8" text-anchor="end">R5</text>
+            <text x="12" y="22" class="dtext" font-size="11" font-weight="600" fill="var(--purple)">92%</text><text x="48" y="22" class="dtext-sm" font-size="8.5">latest release</text>
+          </svg></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 10 ============ -->
+  <section class="section" id="s10">
+    <h2 class="section-heading"><span class="section-num">10</span> Architecture Decision Records</h2>
+    <p class="section-kicker">Ten decisions, each with the alternative we rejected. ADR-07 to ADR-10 are new in version 2.</p>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-01</span><span class="adr-title">Client-side app, no backend</span><span class="badge teal">kept from v1</span></div>
+      <div class="adr-row"><strong>Decision:</strong> The app runs in the browser. Document content goes only to the model API, with the writer's key, during a run.</div>
+      <div class="adr-row"><strong>Rejected:</strong> A hosted backend that proxies model calls. It would receive Tessellate's unreleased feature content and need its own security review.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> No server-side rate limiting or logging. The run log in Git replaces server logs.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-02</span><span class="adr-title">Groq behind a provider adapter</span><span class="badge amber">revised</span></div>
+      <div class="adr-row"><strong>Decision:</strong> Start on <code>llama-3.3-70b-versatile</code> on Groq <sup class="ref"><a href="#src-17">[17]</a></sup>, called through a thin adapter, so the model can change behind the promotion gate.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Hard-coding one model. Version 1 named a model ID that Groq no longer lists.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> The adapter is one more module to test. It costs little compared with a rewrite when a model is retired.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-03</span><span class="adr-title">Six single-purpose agents, not one large prompt</span><span class="badge teal">kept</span></div>
+      <div class="adr-row"><strong>Decision:</strong> Each agent has one job, one input schema and one output schema.</div>
+      <div class="adr-row"><strong>Rejected:</strong> One call that does everything. Its reasoning card could only say "I did everything", and the writer loses the stage-by-stage explanation.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> Five or six calls per run instead of one. At current Groq speeds this adds seconds, not minutes.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-04</span><span class="adr-title">Versioned rules file, not retrieval over the style guide</span><span class="badge teal">kept</span></div>
+      <div class="adr-row"><strong>Decision:</strong> About 80 high-impact rules as structured JSON, each with an ID, a check type and fixtures.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Retrieval over the whole style guide. Approximate matches produce citations a writer cannot trust.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> The rules cover a disclosed subset. Judgment calls stay with the writer.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-05</span><span class="adr-title">Fixed graph, not an autonomous agent loop</span><span class="badge teal">kept</span></div>
+      <div class="adr-row"><strong>Decision:</strong> Every run visits the same stages in the same order.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Letting the model choose its next tool. It could decide a draft is clean and skip compliance.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> Less flexible. For a process with mandatory checks, that is the point.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-06</span><span class="adr-title">Ambiguity Detector as a separate critic</span><span class="badge teal">kept</span></div>
+      <div class="adr-row"><strong>Decision:</strong> A second call, prompted only to find vague terms and missing failure paths in a draft it did not write.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Asking the Draft Agent to check its own work. Writers and models both defend what they just produced.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> One extra call per P2 run.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-07</span><span class="adr-title">One structured draft, two emitters (DITA 1.3 and MDX)</span><span class="badge purple">new</span></div>
+      <div class="adr-row"><strong>Decision:</strong> The model writes a JSON <code>DraftDocument</code>. Code turns it into a DITA task, concept or reference, and into an MDX page.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Asking the model for XML directly, or converting DITA to MDX after the fact. The first risks invalid markup from the model; the second makes MDX a lossy copy.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> The emitters need maintenance when topic types grow. DITA stays the source of truth, written in 1.3 because DITA 2.0 is not yet final.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-08</span><span class="adr-title">Same rule IDs in the app and in Vale</span><span class="badge purple">new</span></div>
+      <div class="adr-row"><strong>Decision:</strong> Every pattern and structural rule exists twice under one ID: once in <code>rules.json</code> for the app, once as a Vale rule for CI.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Checking only in the app. A writer could edit after export and reintroduce a violation that nothing catches.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> Two implementations per rule. A CI job compares the ID lists so they cannot drift apart.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-09</span><span class="adr-title">The writer opens the pull request; the app holds no Git credentials</span><span class="badge purple">new</span></div>
+      <div class="adr-row"><strong>Decision:</strong> The app produces the files, the run log and a ready-made PR description. The writer commits and opens the PR.</div>
+      <div class="adr-row"><strong>Rejected:</strong> Storing a GitHub token in the browser so the app can push. That widens the credential risk from a model key to repository write access.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> One manual step for the writer. It is also a deliberate moment of ownership.</div></div>
+
+    <div class="adr-card"><div class="adr-head"><span class="adr-id">ADR-10</span><span class="adr-title">Two gates: writer in the app, code owner in Git</span><span class="badge purple">new</span></div>
+      <div class="adr-row"><strong>Decision:</strong> Gate 1 locks export until every HIGH flag has a decision. Gate 2 uses CODEOWNERS with required review, so merge needs a subject-matter approval <sup class="ref"><a href="#src-14">[14]</a></sup>.</div>
+      <div class="adr-row"><strong>Rejected:</strong> A single in-app approval. It proves the writer looked, but not that someone who knows the feature agreed.</div>
+      <div class="adr-row"><strong>Trade-off:</strong> SMEs review every AI-drafted topic. Section 11 explains why that review gets shorter, not longer.</div></div>
+  </section>
+
+  <!-- ============ 11 ============ -->
+  <section class="section" id="s11">
+    <h2 class="section-heading"><span class="section-num">11</span> Objection Handling</h2>
+    <p class="section-kicker">The questions a principal engineer, a docs director and a security reviewer will ask.</p>
+
+    <div class="adr-card"><div class="obj-q">"Isn't this replacing writers with AI?"</div>
+      <div class="adr-row">No content can publish without two human approvals, and the writer is named on every run. The pipeline removes the blank page and the context chase. Judgment about what the reader needs, and the decision to approve, stay with people. The capacity it returns (Section 5) goes to review, specs and field requests.</div></div>
+
+    <div class="adr-card"><div class="obj-q">"LLMs invent commands. Why trust a drafted procedure?"</div>
+      <div class="adr-row">The Draft Agent may only use facts that the Research Agent tied to a source span in the PR, spec or an answer from a named person. Anything else becomes <code>[REQUIRES INPUT]</code>, and export stays locked until a human resolves it. The evaluation harness treats a single guessed fact as a failed release (D5).</div></div>
+
+    <div class="adr-card"><div class="obj-q">"Self-reported confidence is unreliable."</div>
+      <div class="adr-row">Agreed, so the UI labels it "agent-estimated" and does not gate on it. The useful part of the card is the list of specific uncertainties. Confidence only orders the writer's attention, and the two human gates do the protecting.</div></div>
+
+    <div class="adr-card"><div class="obj-q">"Eighty rules is a fraction of the style guide."</div>
+      <div class="adr-row">The rules are the subset that can be checked reliably. A check that raises false alarms teaches writers to ignore it, so the false-positive rate is a blocking gate (D3). The scope is published in the app, and the rest of the guide stays a matter of editorial judgment.</div></div>
+
+    <div class="adr-card"><div class="obj-q">"Won't code owners now have twice the review load?"</div>
+      <div class="adr-row">They already review these topics. The difference is what reaches them: wording problems are fixed at gate 1, open questions arrive as explicit questions, and the PR description lists the writer's decisions. The target in Section 9 is one review round instead of about two.</div></div>
+
+    <div class="adr-card"><div class="obj-q">"Fifty fixtures is too small an evaluation set."</div>
+      <div class="adr-row">The fixtures are a specification test, not a statistical sample. Each one covers a rule category or a known failure mode. New failure modes found in real runs become new fixtures, and the run logs in Git show drift that fixtures miss.</div></div>
+
+    <div class="adr-card"><div class="obj-q">"An API key in the browser is a security risk."</div>
+      <div class="adr-row">The key is limited to model inference, kept in session storage by default, and the Content Security Policy only allows connections to the model API. The app holds no Git credentials at all (ADR-09). The alternative, a backend, would hold unreleased product content, which is the larger risk for Tessellate.</div></div>
+
+    <div class="adr-card"><div class="obj-q">"Why not use a general chat assistant?"</div>
+      <div class="adr-row">A chat assistant can draft text. It does not know Tessellate's topic types, does not check the house rules with citations, does not emit valid DITA, and leaves no record of who approved what. Those four gaps are the scope of this design.</div></div>
+  </section>
+
+  <!-- ============ 12 ============ -->
+  <section class="section" id="s12">
+    <h2 class="section-heading"><span class="section-num">12</span> Cost Analysis</h2>
+    <p class="section-kicker">Inference costs a few dollars a year. The real cost is the people who maintain the rules and review the drafts.</p>
+
+    <h3 class="subsection-heading">Running cost per run</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Agent call</th><th>Input tokens</th><th>Output tokens</th><th>Runs in</th></tr>
+        <tr><td>A-01 Intake</td><td>1,500</td><td>500</td><td>P1, P2</td></tr>
+        <tr><td>A-02 Research</td><td>2,500</td><td>1,000</td><td>P1, P2</td></tr>
+        <tr><td>A-03 Draft</td><td>4,000</td><td>2,500</td><td>P1, P2</td></tr>
+        <tr><td>A-04 Ambiguity</td><td>4,500</td><td>2,500</td><td>P2 only</td></tr>
+        <tr><td>A-05 Compliance (semantic pass)</td><td>5,500</td><td>1,000</td><td>P1, P2</td></tr>
+        <tr><td>A-06 Review Prep</td><td>0</td><td>0</td><td>code only, no model call</td></tr>
+        <tr class="highlight"><td>Total per run</td><td>P1 13,500 · P2 18,000</td><td>P1 5,000 · P2 7,500</td><td><span class="badge amber">estimate</span></td></tr>
+      </table>
+    </div>
+    <p class="body-text">At $0.59 per million input tokens and $0.79 per million output tokens for <code>llama-3.3-70b-versatile</code> <sup class="ref"><a href="#src-19">[19]</a></sup>, a P1 run costs about $0.012 and a P2 run about $0.017.</p>
+
+    <h3 class="subsection-heading">Annual cost for Tessellate</h3>
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Item</th><th>Annual</th><th>Basis</th></tr>
+        <tr><td>Model inference</td><td>~$8.40</td><td>540 P1 runs + 120 P2 runs (three runs per feature, 40 specs) <span class="badge amber">illustrative</span></td></tr>
+        <tr><td>Inference with 10× headroom</td><td>~$84</td><td>Re-runs, longer PRs, compliance-only passes</td></tr>
+        <tr><td>Hosting (GitHub Pages)</td><td>$0</td><td>Static app</td></tr>
+        <tr><td>CI (GitHub Actions)</td><td>$0 to plan minutes</td><td>Standard runners are free for public repositories; a private docs repo draws on the plan's included minutes <sup class="ref"><a href="#src-15">[15]</a></sup></td></tr>
+        <tr><td>DITA-OT</td><td>$0</td><td>Open source. Oxygen licenses already exist for the writers.</td></tr>
+        <tr><td>Rules upkeep</td><td>~8 director-days</td><td>About two days a quarter <span class="badge amber">illustrative</span></td></tr>
+        <tr><td>Evaluation upkeep</td><td>~4 engineer-days</td><td>About one day per release <span class="badge amber">illustrative</span></td></tr>
+      </table>
+    </div>
+    <div class="callout purple">
+      <div class="callout-label">What the numbers say</div>
+      <div class="callout-body">Even at ten times the expected volume, inference stays under $100 a year, against ~$140,000 of writer capacity returned (Section 5, illustrative). The budget conversation is about twelve days of upkeep and about reviewer attention, which Section 9 measures. Groq's free plan limits vary by model, so a team rollout should plan for a paid developer plan and confirm current limits in the account <sup class="ref"><a href="#src-18">[18]</a></sup>.</div>
+    </div>
+    <div class="stat-grid" style="grid-template-columns:1fr 1fr">
+      <div class="stat-cell"><div class="stat-value teal">~$8–84</div><div class="stat-label">Inference per year, expected to 10× volume</div></div>
+      <div class="stat-cell"><div class="stat-value coral">~$140k</div><div class="stat-label">Writer capacity returned per year (§5, illustrative)</div></div>
+    </div>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 12.1 — Where the Cost Actually Sits</div>
+      <div class="figure-sublabel">Annual effort and spend, illustrative. People time dominates; model calls barely register.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 150" width="100%" role="img" aria-label="Upkeep of 12 person-days is the main cost; inference is negligible.">
+          <text x="20" y="34" class="dtext-sm" font-size="10">Rules + eval upkeep</text>
+          <rect x="200" y="20" width="580" height="24" fill="var(--amber-bg)" stroke="var(--amber)" stroke-dasharray="2 2"/>
+          <text x="212" y="37" class="dtext" font-size="10.5" fill="var(--amber)">~12 person-days ≈ $6,240 at $520/day</text>
+          <text x="20" y="78" class="dtext-sm" font-size="10">Inference (10× headroom)</text>
+          <rect x="200" y="64" width="8" height="24" fill="var(--teal)" stroke="var(--teal)"/>
+          <text x="218" y="81" class="dtext" font-size="10.5" fill="var(--teal)">~$84</text>
+          <text x="20" y="122" class="dtext-sm" font-size="10">Hosting + CI</text>
+          <rect x="200" y="108" width="2" height="24" fill="var(--bg3)" stroke="var(--border2)"/>
+          <text x="212" y="125" class="dtext" font-size="10.5" fill="var(--text3)">$0 on public repos · plan minutes if private</text>
+        </svg>
+      </div>
+      <div class="figure-note">Running cost is people-dominated, not model-dominated. Reviewer attention is tracked in §9.</div>
+    </div>
+  </section>
+
+  <!-- ============ 13 ============ -->
+  <section class="section" id="s13">
+    <h2 class="section-heading"><span class="section-num">13</span> Roadmap</h2>
+    <p class="section-kicker">Three horizons. The existing way of writing stays available throughout.</p>
+
+    <div class="figure">
+      <div class="figure-label">Fig. 13.1 — Horizon Timeline</div>
+      <div class="figure-sublabel">◆ marks each exit criterion. A horizon ends when its criterion passes, not when its months run out.</div>
+      <div class="figure-body">
+        <svg viewBox="0 0 820 170" width="100%" role="img" aria-label="Three horizons over six months; manual authoring stays available throughout.">
+          <rect x="20" y="40" width="260" height="40" class="dbox-agent"/><text x="150" y="64" text-anchor="middle" class="dtext" font-size="10">H1 Foundation · months 1–2</text>
+          <rect x="280" y="40" width="260" height="40" class="dbox-ext"/><text x="410" y="64" text-anchor="middle" class="dtext" font-size="10">H2 Docs-as-code pilot · months 3–4</text>
+          <rect x="540" y="40" width="260" height="40" class="dbox-p2"/><text x="670" y="64" text-anchor="middle" class="dtext" font-size="10">H3 Team rollout · months 5–6</text>
+          <text x="24" y="28" class="dtext-sm" font-size="8.5">◆ D1–D7 pass on fixtures</text>
+          <text x="284" y="28" class="dtext-sm" font-size="8.5">◆ one TessOS release through both gates</text>
+          <text x="544" y="28" class="dtext-sm" font-size="8.5">◆ ≥95% of features approved by GA</text>
+          <rect x="20" y="105" width="780" height="20" fill="var(--bg3)"/><text x="410" y="119" text-anchor="middle" class="dtext-sm" font-size="9">Manual authoring in Oxygen — always available, never switched off</text>
+          <text x="540" y="150" class="dtext-sm" font-size="9" fill="var(--amber)">◆ H3 model checkpoint: gpt-oss-120b eval</text>
+        </svg>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="comp-table">
+        <tr><th>Horizon</th><th>Scope</th><th>People involved</th></tr>
+        <tr><td>H1 · months 1–2</td><td><code>rules.json</code> v1 and the matching Vale package · agents A-01 to A-06 · DITA task emitter · gate 1 review UI · run log · evaluation harness baseline on Llama 3.3 70B</td><td>Tools engineer, Helen (rules), Anika and Tomás (fixtures)</td></tr>
+        <tr><td>H2 · months 3–4</td><td>MDX emitter · concept and reference topic types · update mode · CI jobs, including the run-log check · CODEOWNERS on routing docs · pilot on one TessOS release</td><td>Ravi's team as code owners, two pilot writers</td></tr>
+        <tr><td>H3 · months 5–6</td><td>All nine writers · release-gap report for the release manager · evaluate <code>gpt-oss-120b</code> through the promotion gate · link to the capture and consume stages of the documentation lifecycle</td><td>Whole docs team, Sam (release)</td></tr>
+      </table>
+    </div>
+    <p class="body-text">The last item connects this project to the rest of the portfolio. Upstream, a knowledge-capture tool (KnowledgeFlow) can flag a merged PR that has no doc topic and start a run. Downstream, a retrieval assistant for field engineers (VaultRAG) answers from the approved DITA corpus, so only reviewed content reaches it.</p>
+  </section>
+
+  <!-- ============ 14 ============ -->
+  <section class="section" id="s14">
+    <h2 class="section-heading"><span class="section-num">14</span> Stakeholder Deck</h2>
+    <p class="section-kicker">The eight-slide pilot pitch — a carousel view of this same document, not a separate file.</p>
+
+    <div class="carousel" id="deck">
+      <div class="carousel-nav" role="tablist" aria-label="Slides">
+        <button class="slide-btn active" type="button" data-slide="0">1 · The lag</button>
+        <button class="slide-btn" type="button" data-slide="1">2 · Why now</button>
+        <button class="slide-btn" type="button" data-slide="2">3 · Who it affects</button>
+        <button class="slide-btn" type="button" data-slide="3">4 · The pipeline</button>
+        <button class="slide-btn" type="button" data-slide="4">5 · The humans</button>
+        <button class="slide-btn" type="button" data-slide="5">6 · Live run</button>
+        <button class="slide-btn" type="button" data-slide="6">7 · The numbers</button>
+        <button class="slide-btn" type="button" data-slide="7">8 · Pilot and ask</button>
+      </div>
+
+      <div class="slide-panel active" data-panel="0">
+        <div class="slide-headline">Our docs reach customers about five days after the feature does.</div>
+        <div class="slide-sub">One TessOS feature, from merge to WebHelp, takes about ten days. GA is on day five. <span class="badge amber">illustrative</span></div>
+        <ul class="slide-points"><li>Two and a half days of every feature go to chasing context.</li><li>Style problems are found by the engineer reviewing the topic.</li><li>Nobody can say who approved a given topic.</li></ul>
+        <div class="slide-note"><b>Say</b>Show Fig. 4.1 and point at the red bars before saying anything about AI.</div>
+      </div>
+      <div class="slide-panel" data-panel="1">
+        <div class="slide-headline">Late docs cost more than the docs team's time.</div>
+        <ul class="slide-points"><li>DORA 2022: continuous integration lifted performance 34% with below-average docs and 750% with above-average docs.</li><li>Stack Overflow 2024: over 60% of developers spend 30 minutes or more a day searching for answers.</li><li>Model calls are now fast and cheap enough to draft in seconds for cents.</li></ul>
+        <div class="slide-note"><b>Say</b>Cite the sources out loud. The third point is why this is practical now, not why it matters.</div>
+      </div>
+      <div class="slide-panel" data-panel="2">
+        <div class="slide-headline">Four people, four different problems.</div>
+        <ul class="slide-points"><li>Anika rebuilds context for every release feature.</li><li>Tomás writes specs where one vague word becomes a defect.</li><li>Ravi reviews wording when he should review behavior.</li><li>Jordan meets customers who upgraded before the docs existed.</li></ul>
+        <div class="slide-note"><b>Say</b>Slow down here. Name the people, not the roles.</div>
+      </div>
+      <div class="slide-panel" data-panel="3">
+        <div class="slide-headline">Six agents draft and check. Nothing publishes on its own.</div>
+        <div class="slide-sub">Intake → Research → Draft → Ambiguity (specs only) → Compliance → Review Prep, then DITA and MDX from one draft.</div>
+        <ul class="slide-points"><li>Every agent shows its reasoning before the next one runs.</li><li>Missing facts become visible placeholders, never guesses.</li><li>Style verdicts cite a rule ID the team owns.</li></ul>
+        <div class="slide-note"><b>Say</b>One sentence on the agents. Spend the time on the next slide.</div>
+      </div>
+      <div class="slide-panel" data-panel="4">
+        <div class="slide-headline">Two gates, both required, both on the record.</div>
+        <ul class="slide-points"><li>Gate 1: the writer decides on every HIGH flag before export unlocks.</li><li>Gate 2: the code owner approves the pull request before it can merge.</li><li>The run log, with every decision, is committed beside the topic.</li></ul>
+        <div class="slide-note"><b>Say</b>This answers Helen's question from slide 1: who approved it, and what did the AI change.</div>
+      </div>
+      <div class="slide-panel" data-panel="5">
+        <div class="slide-headline">Live: a pull request with a number nobody verified.</div>
+        <div class="slide-sub">Run the "unsupported claim" scenario in Section 8.</div>
+        <ul class="slide-points"><li>Watch the Research Agent flag the 512k claim.</li><li>Watch export stay locked until Ravi answers.</li><li>Read the ledger aloud: who asked, who answered, who approved.</li></ul>
+        <div class="slide-note"><b>Fallback</b>If the page will not load, walk through Fig. 7.2, the reasoning card that shows the same flag.</div>
+      </div>
+      <div class="slide-panel" data-panel="6">
+        <div class="slide-headline">About $140,000 of writer time back each year, for under $100 of inference.</div>
+        <ul class="slide-points"><li>Capacity, not headcount: writers move to review and specs.</li><li>Inference ~$8 a year at expected volume, under $100 at ten times that.</li><li>Real cost: about twelve days a year of rules and evaluation upkeep.</li></ul>
+        <div class="slide-note"><b>Say</b>State that both figures are modelled before anyone asks. Point to Sections 5 and 12.</div>
+      </div>
+      <div class="slide-panel" data-panel="7">
+        <div class="slide-headline">Pilot one release, on routing docs, with two writers.</div>
+        <ul class="slide-points"><li>H1: agents, rules and gate 1, tested on fixtures.</li><li>H2: CI, CODEOWNERS and one real TessOS release.</li><li>H3: the whole team, if the pilot meets its exit criteria.</li></ul>
+        <div class="slide-note"><b>Ask</b>Ask out loud, not on the slide: Ravi's team as code owners for the pilot, and Helen as owner of the rules.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APPENDIX ============ -->
+  <section class="section" id="appendix">
+    <h2 class="section-heading"><span class="section-num">A</span> Glossary</h2>
+    <p class="section-kicker">Terms used in this document.</p>
+    <table class="comp-table">
+      <tr><th>Term</th><th>Meaning in this document</th></tr>
+      <tr><td>CODEOWNERS</td><td>A GitHub file that maps paths to the people or teams who must review changes to them.</td></tr>
+      <tr><td>conref / keyref</td><td>DITA mechanisms for reusing content and for indirect links through keys defined in a map.</td></tr>
+      <tr><td>DDLC</td><td>Documentation development lifecycle: intake, research, drafting, review, publishing and maintenance.</td></tr>
+      <tr><td>DDD</td><td>Documentation-driven development. The spec or README is written first and drives the build.</td></tr>
+      <tr><td>DITA 1.3</td><td>An OASIS XML standard for topic-based authoring, with concept, task and reference topic types.</td></tr>
+      <tr><td>DITA-OT</td><td>The open-source DITA Open Toolkit, used here to validate topics in CI.</td></tr>
+      <tr><td>EVPN</td><td>Ethernet VPN, a BGP control plane for layer 2 and layer 3 services (RFC 7432).</td></tr>
+      <tr><td>Gate 1 / Gate 2</td><td>The two mandatory human approvals: the writer in the app, and the code owner on the pull request.</td></tr>
+      <tr><td>HumanDecision</td><td>The record of one person's action on one flag: accept, edit or dismiss, with a reason.</td></tr>
+      <tr><td>MDX</td><td>Markdown that can include JSX components. The source format for Docusaurus pages.</td></tr>
+      <tr><td>P1 / P2</td><td>The two writer modes: P1 documents shipped features; P2 writes specs before the build.</td></tr>
+      <tr><td>Placeholder</td><td>The text <code>[REQUIRES INPUT: reason]</code>, inserted where the draft lacks a sourced fact.</td></tr>
+      <tr><td>Reasoning card</td><td>What an agent understood, decided, why, and what it is unsure about, with agent-estimated confidence.</td></tr>
+      <tr><td>Route type 5</td><td>The EVPN IP prefix route, defined in RFC 9136.</td></tr>
+      <tr><td>rules.json</td><td>The versioned house-style rules file. Every rule has an ID, a check type and fixtures.</td></tr>
+      <tr><td>Run log</td><td>The JSON record of one approved run, committed to <code>.taa/runs/</code> with the topic.</td></tr>
+      <tr><td>Vale</td><td>An open-source prose linter that checks text against style rules in CI.</td></tr>
+      <tr><td>VRF</td><td>Virtual routing and forwarding: a separate routing table, used here per tenant.</td></tr>
+      <tr><td>VXLAN</td><td>An overlay encapsulation used with EVPN in data-center fabrics (RFC 8365).</td></tr>
+      <tr><td>WebHelp</td><td>Oxygen's responsive HTML output for DITA content.</td></tr>
+    </table>
+  </section>
+
+  <section class="section" id="sources">
+    <h2 class="section-heading"><span class="section-num">S</span> Sources</h2>
+    <p class="section-kicker">Every external claim in this document, numbered as cited in the text.</p>
+    <p class="body-text">Superscript numbers in the text link here. Figures marked <span class="badge amber">illustrative</span> are modelled from stated assumptions and have no external source. Tessellate Networks, its products and its people are fictional; nothing here describes a real vendor.</p>
+    <div class="src-group">Research and industry data</div>
+    <ol class="src-list">
+      <li id="src-1" value="1"><a href="https://dora.dev/capabilities/documentation-quality/" target="_blank" rel="noopener">DORA — Documentation quality (capability guide)</a><span class="src-use">Used for: Documentation quality amplifies technical practices; 2022 lift figures in §5 and the deck.</span></li>
+      <li id="src-2" value="2"><a href="https://stackoverflow.co/teams/resources/your-developers-deserve-better-insights-from-the-2024-developer-survey" target="_blank" rel="noopener">Stack Overflow — Your developers deserve better: insights from the 2024 Developer Survey</a><span class="src-use">Used for: Search time and knowledge-silo figures in §5 and the deck.</span></li>
+    </ol>
+    <div class="src-group">Networking standards</div>
+    <ol class="src-list">
+      <li id="src-3" value="3"><a href="https://www.rfc-editor.org/rfc/rfc7432.html" target="_blank" rel="noopener">IETF RFC 7432 — BGP MPLS-Based Ethernet VPN</a><span class="src-use">Used for: EVPN baseline; MAC mobility detection used in simulation scenario 2.</span></li>
+      <li id="src-4" value="4"><a href="https://datatracker.ietf.org/doc/html/rfc8365" target="_blank" rel="noopener">IETF RFC 8365 — A Network Virtualization Overlay Solution Using EVPN</a><span class="src-use">Used for: EVPN with VXLAN encapsulation, the prerequisite in the sample task.</span></li>
+      <li id="src-5" value="5"><a href="https://www.rfc-editor.org/rfc/rfc9136.html" target="_blank" rel="noopener">IETF RFC 9136 — IP Prefix Advertisement in EVPN</a><span class="src-use">Used for: Route type 5, the feature documented in §4, §7 and the simulation.</span></li>
+      <li id="src-6" value="6"><a href="https://datatracker.ietf.org/doc/html/draft-saum-bess-dampening-backoff-00" target="_blank" rel="noopener">IETF draft — EVPN MAC Dampening Back-off</a><span class="src-use">Used for: Describes RFC 7432's N-moves-in-M-seconds timer and the 5 / 180 s values.</span></li>
+    </ol>
+    <div class="src-group">Authoring and publishing standards</div>
+    <ol class="src-list">
+      <li id="src-7" value="7"><a href="https://docs.oasis-open.org/dita/dita/v1.3/dita-v1.3-part3-all-inclusive.html" target="_blank" rel="noopener">OASIS — DITA Version 1.3 specification</a><span class="src-use">Used for: Topic types (task, concept, reference), keys and conrefs in the emitter design.</span></li>
+      <li id="src-8" value="8"><a href="https://www.dita-ot.org/dev/reference/dita-v1-3-support" target="_blank" rel="noopener">DITA Open Toolkit — DITA 1.3 support</a><span class="src-use">Used for: DITA-OT as the open-source validator in CI.</span></li>
+      <li id="src-9" value="9"><a href="https://docusaurus.io/docs/markdown-features/react" target="_blank" rel="noopener">Docusaurus — MDX and React</a><span class="src-use">Used for: MDX as the portal format; front matter and admonitions in the sample page.</span></li>
+      <li id="src-10" value="10"><a href="https://www.oxygenxml.com/doc/ug-editor/topics/whr_generate_output.html" target="_blank" rel="noopener">Oxygen XML — Generating WebHelp Responsive output</a><span class="src-use">Used for: Tessellate's existing WebHelp publishing path.</span></li>
+    </ol>
+    <div class="src-group">Style and linting</div>
+    <ol class="src-list">
+      <li id="src-11" value="11"><a href="https://developers.google.com/style" target="_blank" rel="noopener">Google developer documentation style guide</a><span class="src-use">Used for: Base of the house style and the rules in rules.json.</span></li>
+      <li id="src-12" value="12"><a href="https://github.com/errata-ai/Google" target="_blank" rel="noopener">Vale-compatible implementation of the Google style guide (community, MIT; not maintained or endorsed by Google)</a><span class="src-use">Used for: Starting package for the CI style check.</span></li>
+      <li id="src-13" value="13"><a href="https://passo.uno/posts/first-steps-with-the-vale-prose-linter/" target="_blank" rel="noopener">Fabrizio Ferri-Benedetti — First steps with the Vale prose linter</a><span class="src-use">Used for: How Vale is configured and run in GitHub Actions.</span></li>
+    </ol>
+    <div class="src-group">GitHub platform</div>
+    <ol class="src-list">
+      <li id="src-14" value="14"><a href="https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners" target="_blank" rel="noopener">GitHub Docs — About code owners</a><span class="src-use">Used for: Automatic review requests and "Require review from Code Owners" for gate 2.</span></li>
+      <li id="src-15" value="15"><a href="https://docs.github.com/en/billing/concepts/product-billing/github-actions" target="_blank" rel="noopener">GitHub Docs — How use of GitHub Actions is measured</a><span class="src-use">Used for: CI cost line in §12.</span></li>
+      <li id="src-16" value="16"><a href="https://github.com/hotosm/tech/issues/127" target="_blank" rel="noopener">HOT tech issue #127 — GitHub Pages and custom HTTP headers</a><span class="src-use">Used for: Why the Content Security Policy is set with a meta tag.</span></li>
+    </ol>
+    <div class="src-group">Model provider</div>
+    <ol class="src-list">
+      <li id="src-17" value="17"><a href="https://console.groq.com/docs/models" target="_blank" rel="noopener">GroqDocs — Supported models</a><span class="src-use">Used for: llama-3.3-70b-versatile and gpt-oss-120b as production models; 131,072-token context.</span></li>
+      <li id="src-18" value="18"><a href="https://console.groq.com/docs/rate-limits" target="_blank" rel="noopener">GroqDocs — Rate limits</a><span class="src-use">Used for: Free-plan limits vary by model; plan for a paid tier at team scale.</span></li>
+      <li id="src-19" value="19"><a href="https://www.getmaxim.ai/bifrost/llm-cost-calculator/provider/groq/model/llama-3.3-70b-versatile" target="_blank" rel="noopener">Maxim — Groq llama-3.3-70b-versatile cost calculator</a><span class="src-use">Used for: $0.59 / $0.79 per million input / output tokens, used in §12.</span></li>
+    </ol>
+    <div class="src-group">Format and prior work</div>
+    <ol class="src-list">
+      <li id="src-20" value="20"><a href="https://raosiddharthp.github.io/SLUDGE/" target="_blank" rel="noopener">SLUDGE — living design document (same author)</a><span class="src-use">Used for: Section structure, layout and visual system of this page.</span></li>
+      <li id="src-21" value="21"><a href="https://github.com/raosiddharthp/The-Autonomous-Author" target="_blank" rel="noopener">The Autonomous Author v1 (same author)</a><span class="src-use">Used for: Original nine-page design; agents, rules.json and eval harness carried into v2.</span></li>
+    </ol>
+  </section>
+
+  <footer class="doc-footer">The Autonomous Author v2 · a portfolio design document for a fictional client, Tessellate Networks · Siddharth Rao Potukuchi · MIT licensed</footer>
+
+  </div>
+</div>
+</div>
+
+<script>
+(function () {
+  var STAGES = 7;
+  var scenarios = [
+    {
+      desc: '<strong>Anika Desai, P1.</strong> PR #4182 "evpn: advertise IP prefix routes per VRF" merged this morning. She pastes the PR link and asks for a task topic.',
+      timings: [1100, 2400, 4800, 0, 2900, 0, 0],
+      states: ['done', 'done', 'done', 'skip', 'done', 'human', 'human'],
+      status: ['done', 'merged after two human approvals'],
+      log: [
+        ['c', '# taa run 7f3e · persona P1 · rules 1.6.0 · model llama-3.3-70b-versatile'],
+        ['c', '# A-01 intake → DocBrief'],
+        ['kv', 'doc_type: ', 'task (writer confirmed)'],
+        ['kv', 'feature: ', 'EVPN IP prefix routes, route type 5 (RFC 9136)'],
+        ['c', '# A-02 research → ContextPack'],
+        ['kv', 'facts: ', '6, each tied to a line in the PR or diff'],
+        ['kv', 'gaps: ', '0 · questions: 0'],
+        ['c', '# A-03 draft → DraftDocument (2 steps, 1 result, keyref evpn-overview)'],
+        ['kv', 'confidence: ', '0.84 (agent-estimated)'],
+        ['c', '# A-04 ambiguity → skipped in P1'],
+        ['c', '# A-05 compliance → 78 pattern/structural rules local, 2 semantic via model'],
+        ['w', 'R-047 MED  "e.g. tenant-blue" → "for example, tenant-blue"'],
+        ['w', 'R-074 LOW  "simply enable" → "enable"'],
+        ['c', '# A-06 review prep → 2 flags, 0 HIGH · export lock: waiting for writer'],
+        ['h', '> gate 1 · Anika accepts both fixes and approves'],
+        ['ok', 'emit topics/routing/evpn-ip-prefix-enable.dita (DITA-OT: valid)'],
+        ['ok', 'emit docs/routing/evpn-ip-prefix-enable.mdx (build: ok)'],
+        ['ok', 'commit .taa/runs/7f3e.json · PR #212 opened by Anika'],
+        ['ok', 'CI: vale 0 errors · dita ok · portal ok · links ok · run-log ok'],
+        ['h', '> gate 2 · code owner @tessellate/routing-sme (Ravi Menon) approves'],
+        ['ok', 'merged · WebHelp and portal publish on the next build']
+      ],
+      ledger: [
+        'Gate 1 · Anika Desai · accepted R-047 fix · 10:42',
+        'Gate 1 · Anika Desai · accepted R-074 fix · 10:42',
+        'Gate 1 · Anika Desai · approved export · 10:44',
+        'Gate 2 · Ravi Menon · approved PR #212 · 14:05'
+      ]
+    },
+    {
+      desc: '<strong>Tomás Ferreira, P2.</strong> A two-paragraph intent for a new spec: "MAC mobility dampening for the fabric". Engineering starts the build next sprint.',
+      timings: [1000, 2600, 6100, 3900, 3200, 0, 0],
+      states: ['done', 'done', 'done', 'done', 'done', 'blocked', 'pending'],
+      status: ['held', 'held at gate 1 · 3 HIGH flags need the author'],
+      log: [
+        ['c', '# taa run a91c · persona P2 · rules 1.6.0 · model llama-3.3-70b-versatile'],
+        ['c', '# A-01 intake → DocBrief'],
+        ['kv', 'doc_type: ', 'spec · imperative "The switch shall…" voice'],
+        ['c', '# A-02 research → ContextPack'],
+        ['kv', 'facts: ', '4 · related standard: RFC 7432 §15 (MAC mobility)'],
+        ['kv', 'gaps: ', '1 → "flap window" is never defined'],
+        ['c', '# A-03 draft → spec with 7 requirements, 1 placeholder'],
+        ['c', '# A-04 ambiguity → critic pass on a draft it did not write'],
+        ['b', 'HIGH  REQ-3 "converges quickly" · vague quantifier'],
+        ['b', 'HIGH  REQ-4 "after a reasonable number of moves" · vague quantifier'],
+        ['kv', '      suggest: ', 'state N moves within M seconds; RFC 7432 §15.1 defaults are 5 and 180 s'],
+        ['b', 'HIGH  REQ-5 suppresses the MAC, but no requirement says how it is released'],
+        ['w', 'MED   "flap window" used before it is defined'],
+        ['c', '# A-05 compliance → 1 LOW (R-033 future tense "will")'],
+        ['c', '# A-06 review prep → 3 HIGH, 1 MED, 1 LOW · 1 placeholder'],
+        ['b', 'export locked: 3 HIGH flags and 1 placeholder have no decision'],
+        ['c', '# gate 2 not reached · no files emitted · nothing sent to engineering']
+      ],
+      ledger: [
+        'Gate 1 · pending · Tomás Ferreira must decide REQ-3, REQ-4, REQ-5',
+        'Gate 1 · pending · placeholder "flap window definition" open',
+        'Gate 2 · not reached · Ravi Menon sees nothing until gate 1 clears'
+      ]
+    },
+    {
+      desc: '<strong>Anika Desai, compliance only.</strong> A 2019 topic, "Configure VXLAN flood lists", is about to be reused in the new portal. No drafting, just a style check.',
+      timings: [700, 0, 0, 0, 3400, 0, 0],
+      states: ['done', 'skip', 'skip', 'skip', 'done', 'human', 'human'],
+      status: ['done', 'merged · 6 fixes accepted, 1 dismissed with a reason'],
+      log: [
+        ['c', '# taa run 33d0 · mode compliance-only · rules 1.6.0'],
+        ['c', '# A-01 intake → existing DITA task, 1,240 words · research and draft skipped'],
+        ['c', '# A-05 compliance'],
+        ['w', 'R-047 MED   "e.g." used twice'],
+        ['w', 'R-012 MED   "the user should configure" → "configure"'],
+        ['w', 'R-033 MED   "the list will display" → "the list displays"'],
+        ['w', 'R-061 LOW   heading in title case → sentence case'],
+        ['w', 'R-074 LOW   "simply"'],
+        ['w', 'R-019 MED   passive voice in step 3: "the VTEP list is populated"'],
+        ['b', 'S-03  HIGH  task has no <result> element'],
+        ['c', '# A-06 review prep → 1 HIGH, 4 MED, 2 LOW'],
+        ['h', '> gate 1 · Anika adds a <result>, accepts 5 fixes, dismisses R-019'],
+        ['kv', '  reason: ', 'the controller populates the list, not the reader; passive is accurate'],
+        ['ok', 'emit updated .dita and new .mdx · PR #219 opened'],
+        ['ok', 'CI: all jobs pass · run-log has a decision for the HIGH item'],
+        ['h', '> gate 2 · Ravi Menon approves'],
+        ['ok', 'merged']
+      ],
+      ledger: [
+        'Gate 1 · Anika Desai · fixed S-03 by hand (added <result>)',
+        'Gate 1 · Anika Desai · accepted 5 rule fixes',
+        'Gate 1 · Anika Desai · dismissed R-019: "actor is the controller; passive is accurate"',
+        'Gate 2 · Ravi Menon · approved PR #219',
+        'Rules review · Helen Marsh sees the R-019 dismissal in next quarter\'s report'
+      ]
+    },
+    {
+      desc: '<strong>Anika Desai, P1.</strong> PR #4199 raises type 5 route scale. The description says "supports up to 512k prefixes per VRF", but nothing in the diff or tests shows that number.',
+      timings: [1050, 2900, 5200, 0, 2800, 0, 0],
+      states: ['done', 'done', 'done', 'skip', 'done', 'human', 'human'],
+      status: ['done', 'merged after the SME answered the open question'],
+      log: [
+        ['c', '# taa run c5b8 · persona P1 · rules 1.6.0'],
+        ['c', '# A-02 research'],
+        ['b', 'gap: "512k prefixes per VRF" has no source in the diff, tests or linked spec'],
+        ['kv', 'question 1: ', 'What prefix scale per VRF has QA verified for TessOS 4.2?'],
+        ['c', '# A-03 draft → [REQUIRES INPUT: verified prefix scale per VRF]'],
+        ['kv', 'confidence: ', '0.61 · uncertain: scale figure'],
+        ['c', '# A-05 compliance → 0 violations'],
+        ['b', 'A-06: 1 placeholder (HIGH) · export locked'],
+        ['h', '> Anika forwards question 1 to Ravi Menon'],
+        ['h', '> Ravi answers: "256k verified in QA run 7741; 512k is the target for 4.3"'],
+        ['h', '> gate 1 · Anika replaces the placeholder with 256k and cites the QA run'],
+        ['ok', 'emit .dita and .mdx · PR #224 · run log records question, answer and answerer'],
+        ['ok', 'CI: all jobs pass'],
+        ['h', '> gate 2 · Ravi Menon approves'],
+        ['ok', 'merged · the unverified 512k figure never reached a customer']
+      ],
+      ledger: [
+        'Research · question raised automatically: verified prefix scale',
+        'Clarify · forwarded by Anika Desai to Ravi Menon',
+        'Clarify · answered by Ravi Menon: 256k, QA run 7741',
+        'Gate 1 · Anika Desai · resolved placeholder with a cited figure',
+        'Gate 2 · Ravi Menon · approved PR #224'
+      ]
+    }
+  ];
+
+  var active = 0, running = false;
+  var $ = function (id) { return document.getElementById(id); };
+
+  function line(kind, a, b) {
+    var row = document.createElement('span');
+    row.className = 'out-line';
+    var map = { c: 'out-comment', w: 'out-warn', b: 'out-bad', ok: 'out-ok', h: 'out-warn' };
+    if (kind === 'kv') {
+      var k = document.createElement('span'); k.className = 'out-key'; k.textContent = a;
+      var v = document.createElement('span'); v.className = 'out-val'; v.textContent = b;
+      row.appendChild(k); row.appendChild(v);
+    } else {
+      var s = document.createElement('span'); s.className = map[kind] || 'out-val'; s.textContent = a;
+      row.appendChild(s);
+    }
+    return row;
+  }
+
+  function fmt(ms) { return ms < 1000 ? ms + ' ms' : (ms / 1000).toFixed(1) + ' s'; }
+  function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function setStage(i, state, timing) {
+    var dot = $('dot-' + i), bar = $('bar-' + i), tim = $('tim-' + i);
+    dot.className = 'stage-dot';
+    bar.className = 'stage-bar-fill';
+    bar.style.width = '0';
+    tim.textContent = '—';
+    if (state === 'done') { dot.classList.add('done'); bar.style.width = '100%'; tim.textContent = fmt(timing); }
+    if (state === 'human') { dot.classList.add('human'); bar.classList.add('human'); bar.style.width = '100%'; tim.textContent = 'approved'; }
+    if (state === 'blocked') { dot.classList.add('blocked'); bar.classList.add('blocked'); bar.style.width = '100%'; tim.textContent = 'held'; }
+    if (state === 'skip') { dot.classList.add('skipped'); tim.textContent = 'skipped'; }
+    if (state === 'pending') { tim.textContent = 'not reached'; }
+    if (state === 'running') { dot.classList.add('running'); }
+  }
+
+  function renderFinal(s) {
+    for (var i = 0; i < STAGES; i++) setStage(i, s.states[i], s.timings[i]);
+    var out = $('sim-output'); out.textContent = '';
+    s.log.forEach(function (l) { out.appendChild(line(l[0], l[1], l[2])); });
+    renderLedger(s, s.ledger.length);
+  }
+
+  function renderLedger(s, n) {
+    var rows = $('hitl-rows'); rows.textContent = '';
+    if (n === 0) { var d = document.createElement('div'); d.textContent = 'No human decisions yet. Run the scenario.'; rows.appendChild(d); return; }
+    s.ledger.slice(0, n).forEach(function (t) { var d = document.createElement('div'); d.textContent = t; rows.appendChild(d); });
+  }
+
+  function select(i) {
+    if (running) return;
+    active = i;
+    for (var j = 0; j < scenarios.length; j++) {
+      var b = $('scn-' + j);
+      b.classList.toggle('active', i === j);
+      b.setAttribute('aria-selected', i === j ? 'true' : 'false');
+    }
+    var s = scenarios[i];
+    $('sim-desc').innerHTML = s.desc;
+    for (var k = 0; k < STAGES; k++) setStage(k, 'idle', 0);
+    var out = $('sim-output'); out.textContent = '';
+    out.appendChild(line('c', '# press Run simulation to watch this scenario'));
+    renderLedger(s, 0);
+    var st = $('sim-status'); st.textContent = 'ready'; st.className = 'sim-status';
+  }
+
+  async function run() {
+    if (running) return;
+    running = true; $('run-btn').disabled = true;
+    var s = scenarios[active];
+    var st = $('sim-status'); st.textContent = 'running'; st.className = 'sim-status running';
+    for (var k = 0; k < STAGES; k++) setStage(k, 'idle', 0);
+    var out = $('sim-output'); out.textContent = '';
+    renderLedger(s, 0);
+    var scale = reduce ? 0 : 0.18;
+    for (var i = 0; i < STAGES; i++) {
+      if (s.states[i] === 'skip' || s.states[i] === 'pending') { setStage(i, s.states[i], 0); continue; }
+      setStage(i, 'running', 0);
+      await sleep(Math.max(250, s.timings[i] * scale) * (reduce ? 0 : 1));
+      setStage(i, s.states[i], s.timings[i]);
+    }
+    for (var n = 0; n < s.log.length; n++) {
+      if (!reduce) await sleep(70);
+      var l = s.log[n];
+      out.appendChild(line(l[0], l[1], l[2]));
+      out.scrollTop = out.scrollHeight;
+    }
+    for (var m = 1; m <= s.ledger.length; m++) { if (!reduce) await sleep(140); renderLedger(s, m); }
+    st.textContent = s.status[1];
+    st.className = 'sim-status ' + (s.status[0] === 'held' ? 'held' : 'done');
+    running = false; $('run-btn').disabled = false;
+  }
+
+  for (var j = 0; j < scenarios.length; j++) {
+    (function (idx) { $('scn-' + idx).addEventListener('click', function () { select(idx); }); })(j);
+  }
+  $('run-btn').addEventListener('click', run);
+  select(0);
+  renderFinal(scenarios[0]);
+  $('sim-status').textContent = 'example result shown · press Run to replay';
+
+  /* Deck */
+  var slide = 0;
+  var btns = document.querySelectorAll('.slide-btn');
+  var panels = document.querySelectorAll('.slide-panel');
+  function show(i) {
+    slide = (i + panels.length) % panels.length;
+    btns.forEach(function (b, k) { b.classList.toggle('active', k === slide); b.setAttribute('aria-selected', k === slide ? 'true' : 'false'); });
+    panels.forEach(function (p, k) { p.classList.toggle('active', k === slide); });
+  }
+  btns.forEach(function (b) { b.addEventListener('click', function () { show(parseInt(b.getAttribute('data-slide'), 10)); }); });
+  $('deck').addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowRight') { show(slide + 1); }
+    if (e.key === 'ArrowLeft') { show(slide - 1); }
+  });
+
+  /* Sidebar highlight */
+  var sections = document.querySelectorAll('section[id]');
+  var links = document.querySelectorAll('.sidebar-nav a');
+  window.addEventListener('scroll', function () {
+    var current = '';
+    sections.forEach(function (s) { if (window.scrollY >= s.offsetTop - 120) current = s.id; });
+    links.forEach(function (a) { a.classList.toggle('active', a.getAttribute('href') === '#' + current && !a.classList.contains('sub')); });
+  }, { passive: true });
+})();
+</script>
+
+</body>
+</html>
